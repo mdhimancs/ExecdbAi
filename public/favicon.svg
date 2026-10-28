@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" shape-rendering="geometricPrecision" text-rendering="geometricPrecision">
+  <!-- Dark Obsidian Executive Background -->
+  <rect x="0" y="0" width="32" height="32" rx="6.5" fill="#090d16"/>
+  <!-- Crisp Sharp Inner Border -->
+  <rect x="0.75" y="0.75" width="30.5" height="30.5" rx="5.75" fill="none" stroke="#334155" stroke-width="0.8" opacity="0.9"/>
+  <!-- Centered Letter M in GT Super Editorial Serif Font -->
+  <text x="16" y="12.2" text-anchor="middle" dominant-baseline="central" font-family="'GT Super', 'GT Super Display', 'GT Super Text', 'Playfair Display', Georgia, serif" font-weight="700" font-size="17" fill="#ffffff" letter-spacing="-0.2">M</text>
+  <!-- Thin Silver/White Horizontal Accent Underline with increased padding -->
+  <line x1="5.5" y1="24.5" x2="26.5" y2="24.5" stroke="#e2e8f0" stroke-width="1.0" stroke-linecap="round"/>
+</svg>
