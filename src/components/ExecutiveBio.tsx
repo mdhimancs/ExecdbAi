@@ -26,6 +26,7 @@ import { PERSONAL_INFO } from '../data/portfolioData';
 import { useHoverScroll } from '../lib/utils';
 import { StarsCounter } from './StarsCounter';
 import { SectionBackgroundAura } from './SectionBackgroundAura';
+import { useAuth } from '../context/AuthContext';
 
 interface ExecutiveBioProps {
   theme?: string;
@@ -34,25 +35,67 @@ interface ExecutiveBioProps {
 
 export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light', onNextPage }) => {
   const isLight = theme === 'apple-light';
-  const [activeBioTab, setActiveBioTab] = useState<'summary' | 'philosophy' | 'credentials' | 'video'>('philosophy');
+  const { portfolioMode } = useAuth();
+  const [activeBioTab, setActiveBioTab] = useState<'summary' | 'philosophy' | 'credentials' | 'video'>('summary');
   const { scrollRef, onMouseMove, onMouseLeave } = useHoverScroll();
 
-  const [videoMode, setVideoMode] = useState<'veo' | 'animated'>('veo');
+  const [videoMode, setVideoMode] = useState<'veo' | 'animated' | 'keynote'>('veo');
   const [activeAnimatedScene, setActiveAnimatedScene] = useState<number>(0);
+  const [showSubtitles, setShowSubtitles] = useState<boolean>(true);
+  const [isMuted, setIsMuted] = useState<boolean>(true);
 
-  const VIDEO_PRESETS = [
+  const VIDEO_PRESETS = portfolioMode === 'cybersecurity' ? [
+    {
+      id: 'ciso-keynote',
+      label: '2026 CISO Keynote: Sovereign Zero Trust',
+      type: 'veo',
+      prompt: 'Cinematic 4K keynote address by CISO Munish Dhiman presenting sovereign Zero Trust identity architecture, FIPS 140-3 HSM vaults, and post-quantum lattice cryptography to enterprise executive boards.'
+    },
+    {
+      id: 'animated-philosophy',
+      label: '3D Motion: 6 Security & Governance Axioms',
+      type: 'animated',
+      prompt: 'Stylized 3D vector animation representing the 6 Executive Leadership Axioms: Identity Perimeter, Multi-Enclave Defense, Zero Standing Privilege, Defensive AI Security, Policy-as-Code, and Post-Quantum Cryptography.'
+    },
+    {
+      id: 'transformer-speculative',
+      label: 'Sub-15ms AI Security Gateway & eBPF',
+      type: 'animated',
+      prompt: 'Futuristic animated motion design illustrating inline LLM token sanitization, eBPF kernel packet inspection, and Speculative Target Decoding in TensorRT-LLM.'
+    }
+  ] : [
+    {
+      id: 'ai-keynote',
+      label: '2026 Executive AI Keynote: Planetary Scale',
+      type: 'veo',
+      prompt: 'Cinematic 4K keynote address by AI Executive Munish Dhiman presenting planetary-scale GPU compute clusters, multi-agent LLM orchestration, and low-latency TensorRT serving.'
+    },
     {
       id: 'animated-philosophy',
       label: '3D Motion: 6 AI & Data Science Axioms',
       type: 'animated',
-      prompt: 'Stylized 3D vector animation representing the 6 Executive AI & Data Science Axioms: Empirical Scientific Rigor, Scalable Compute & Distributed Foundations, Low-Latency Inference Efficiency, Autonomous Multi-Agent Reliability, Defensive AI Safety & Alignment, and Continuous Drift & Feedback Loops. Glowing neural network graph, isometric tensor vector animation, smooth 60fps.'
+      prompt: 'Stylized 3D vector animation representing the 6 Executive AI & Data Science Axioms: Empirical Scientific Rigor, Scalable Compute & Distributed Foundations, Low-Latency Inference Efficiency, Autonomous Multi-Agent Reliability, Defensive AI Safety & Alignment, and Continuous Drift & Feedback Loops.'
     },
     {
       id: 'transformer-speculative',
       label: 'Sub-15ms Speculative Decoding & TensorRT',
       type: 'animated',
-      prompt: 'Futuristic animated motion design illustrating Multi-Head Attention, KV-Cache Paging, and Speculative Target Decoding in TensorRT-LLM. Dynamic glowing tensor flows, token verification streams, executive dark-mode aesthetic.'
+      prompt: 'Futuristic animated motion design illustrating Multi-Head Attention, KV-Cache Paging, and Speculative Target Decoding in TensorRT-LLM.'
     }
+  ];
+
+  const KEYNOTE_TRANSCRIPTS = portfolioMode === 'cybersecurity' ? [
+    "Welcome to the 2026 Enterprise Security Keynote.",
+    "Perimeters have dissolved. Identity is now the sole defensible boundary.",
+    "By enforcing Zero Standing Privilege, we eliminate 98.4% of administrative attack surfaces.",
+    "Our FIPS 140-3 HSM vaults protect 5M+ identities with post-quantum lattice cryptography.",
+    "Kernel-level eBPF probes detect and drop malicious traffic at sub-15ms speeds."
+  ] : [
+    "Welcome to the 2026 Executive AI & Data Science Keynote.",
+    "Empirical scientific rigor must replace heuristic intuition in enterprise AI.",
+    "Orchestrating 512x H100 GPU clusters with PyTorch FSDP and DeepSpeed ZeRO.",
+    "Sub-15ms p99 serving latency achieved via Paged KV-Cache attention and vLLM.",
+    "Autonomous multi-agent swarms operating under deterministic safety guardrails."
   ];
 
   const [videoPrompt, setVideoPrompt] = useState<string>(VIDEO_PRESETS[0].prompt);
@@ -63,7 +106,7 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
   const [isPlaying, setIsPlaying] = useState(true);
   const [videoProgress, setVideoProgress] = useState(35);
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
-  const [videoMessage, setVideoMessage] = useState<string | null>("Veo 3 model ready.");
+  const [videoMessage, setVideoMessage] = useState<string | null>("Veo 3.1 AI model ready.");
 
   useEffect(() => {
     let interval: any;
@@ -78,7 +121,7 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
   const handleGenerateVideo = async () => {
     setIsGeneratingVideo(true);
     setVideoError(null);
-    setVideoMessage("Synthesizing Veo 3 cinematic executive frames...");
+    setVideoMessage("Synthesizing Veo 3.1 cinematic executive frames...");
     try {
       const res = await fetch('/api/generate-bio-video', {
         method: 'POST',
@@ -88,14 +131,14 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
       const data = await res.json();
       if (data.success && data.videoUrl) {
         setVideoUrl(data.videoUrl);
-        setVideoMessage(data.message || "Veo 3 executive video synthesized successfully.");
+        setVideoMessage(data.message || "Veo 3.1 executive video synthesized successfully.");
         setIsPlaying(true);
       } else {
         throw new Error(data.error || "Generation failed");
       }
     } catch (err: any) {
       console.error("Video generation failed:", err);
-      setVideoMessage("Veo 3 executive video synthesized via local executive stream.");
+      setVideoMessage("Veo 3.1 executive video synthesized via local executive stream.");
       setVideoUrl('/videos/executive-preview.mp4');
     } finally {
       setIsGeneratingVideo(false);
@@ -118,10 +161,10 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
       >
         {/* Subtle luminous aura behind the heading */}
         <div 
-          className={`absolute -top-3 -left-2 sm:-left-4 w-72 sm:w-96 h-24 sm:h-28 rounded-full blur-2xl pointer-events-none transition-all ${
+          className={`absolute -top-3 -left-2 sm:-left-4 w-72 sm:w-96 h-24 sm:h-28 rounded-full blur-2xl pointer-events-none transition-all duration-1000 ${
             isLight 
-              ? 'bg-gradient-to-r from-blue-400/25 via-sky-300/20 to-indigo-300/20 opacity-80' 
-              : 'bg-gradient-to-r from-blue-500/30 via-cyan-400/20 to-indigo-500/25 opacity-90'
+              ? 'bg-gradient-to-r from-blue-400/20 via-cyan-300/15 to-indigo-300/15 opacity-80' 
+              : 'bg-gradient-to-r from-blue-500/25 via-cyan-400/15 to-indigo-500/20 opacity-90'
           }`} 
         />
 
@@ -131,11 +174,11 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
           isLight ? 'bg-blue-50/90 border-blue-200 text-blue-700 shadow-sm' : 'bg-blue-500/10 border-blue-500/20 text-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.15)]'
         }`}>
           <UserCheck className="w-3.5 h-3.5 text-blue-500" />
-          <span>Executive AI Leadership & Systems Architecture</span>
+          <span>{portfolioMode === 'cybersecurity' ? 'CISO Executive Leadership & Zero Trust Security Architecture' : 'Executive AI Leadership & Systems Architecture'}</span>
         </div>
         
         <h2 
-          className={`relative text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight transition-all leading-tight ${
+          className={`relative text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight transition-all duration-700 leading-tight ${
           isLight 
             ? 'text-zinc-900 drop-shadow-[0_2px_16px_rgba(59,130,246,0.22)]' 
             : 'text-white drop-shadow-[0_0_24px_rgba(96,165,250,0.40)]'
@@ -146,12 +189,14 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
         <p 
           className={`relative max-w-4xl text-[11px] font-normal leading-relaxed ${isLight ? 'text-zinc-700' : 'text-zinc-400'}`}
         >
-          21+ years directing enterprise Machine Learning, Generative AI infrastructure, Distributed Systems, and Data Science.
+          {portfolioMode === 'cybersecurity' 
+            ? '21+ years directing enterprise Cybersecurity, Zero Trust IAM, Risk Governance, and Multi-Cloud Security.' 
+            : '21+ years directing enterprise Machine Learning, Generative AI infrastructure, Distributed Systems, and Data Science.'}
         </p>
       </div>
 
       <div 
-        className={`rounded-3xl backdrop-blur-xl shadow-xl transition-all border flex-1 min-h-0 w-full pt-3 sm:pt-4 pb-2 sm:pb-3 px-4 sm:px-5 lg:px-6 flex flex-col justify-start overflow-y-auto -mt-3 sm:-mt-4 ${
+        className={`rounded-3xl backdrop-blur-xl shadow-xl transition-all duration-700 border flex-1 min-h-0 w-full pt-3 sm:pt-4 pb-2 sm:pb-3 px-4 sm:px-5 lg:px-6 flex flex-col justify-start overflow-y-auto -mt-3 sm:-mt-4 ${
           isLight ? 'bg-white border-zinc-200 shadow-sm' : 'bg-white/[0.02] border-white/10 shadow-2xl'
         }`}
       >
@@ -171,61 +216,61 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
             ref={scrollRef}
             onMouseMove={onMouseMove}
             onMouseLeave={onMouseLeave}
-            className={`flex items-center justify-center gap-1 p-1 rounded-xl border whitespace-nowrap overflow-x-auto cursor-ew-resize select-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] ${
+            className={`flex items-center justify-center gap-1 p-1 rounded-xl border whitespace-nowrap overflow-x-auto cursor-ew-resize select-none transition-all duration-500 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] ${
               isLight 
                 ? 'bg-zinc-100/90 border-zinc-200/90' 
                 : 'bg-zinc-900/80 border-white/10'
             }`}
           >
-             <button
-              onClick={() => setActiveBioTab('philosophy')}
-              className={`px-3 py-1.5 rounded-lg text-[11px] sm:text-[12px] font-medium whitespace-nowrap cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(59,130,246,0.45)] hover:border-blue-400/60 active:scale-95 active:shadow-[0_0_32px_rgba(56,189,248,0.85)] ${
-                activeBioTab === 'philosophy'
-                  ? (isLight 
-                      ? 'bg-white text-zinc-900 border border-blue-400/40 shadow-[0_0_14px_rgba(59,130,246,0.25)] font-semibold' 
-                      : 'bg-zinc-800 text-white border border-blue-400/40 shadow-[0_0_16px_rgba(59,130,246,0.35)] font-semibold')
-                  : (isLight 
-                      ? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60 border border-transparent' 
-                      : 'text-zinc-400 hover:text-white hover:bg-white/5 border border-transparent')
-              }`}
-            >
-              Executive Philosophy
-            </button>
             <button
               onClick={() => setActiveBioTab('summary')}
-              className={`px-3 py-1.5 rounded-lg text-[11px] sm:text-[12px] font-medium whitespace-nowrap cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(59,130,246,0.45)] hover:border-blue-400/60 active:scale-95 active:shadow-[0_0_32px_rgba(56,189,248,0.85)] ${
+              className={`px-3 py-1.5 rounded-lg text-[11px] sm:text-[12px] font-medium whitespace-nowrap cursor-pointer transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(59,130,246,0.35)] hover:border-blue-400/50 active:scale-95 active:shadow-[0_0_28px_rgba(56,189,248,0.75)] ${
                 activeBioTab === 'summary'
                   ? (isLight 
-                      ? 'bg-white text-zinc-900 border border-blue-400/40 shadow-[0_0_14px_rgba(59,130,246,0.25)] font-semibold' 
-                      : 'bg-zinc-800 text-white border border-blue-400/40 shadow-[0_0_16px_rgba(59,130,246,0.35)] font-semibold')
+                      ? 'bg-white text-zinc-900 border border-blue-400/40 shadow-[0_0_14px_rgba(59,130,246,0.2)] font-semibold' 
+                      : 'bg-zinc-800 text-white border border-blue-400/40 shadow-[0_0_16px_rgba(59,130,246,0.3)] font-semibold')
                   : (isLight 
                       ? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60 border border-transparent' 
                       : 'text-zinc-400 hover:text-white hover:bg-white/5 border border-transparent')
               }`}
             >
-              Leadership Pillars
+              Executive Summary & Pillars
+            </button>
+            <button
+              onClick={() => setActiveBioTab('philosophy')}
+              className={`px-3 py-1.5 rounded-lg text-[11px] sm:text-[12px] font-medium whitespace-nowrap cursor-pointer transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(59,130,246,0.35)] hover:border-blue-400/50 active:scale-95 active:shadow-[0_0_28px_rgba(56,189,248,0.75)] ${
+                activeBioTab === 'philosophy'
+                  ? (isLight 
+                      ? 'bg-white text-zinc-900 border border-blue-400/40 shadow-[0_0_14px_rgba(59,130,246,0.2)] font-semibold' 
+                      : 'bg-zinc-800 text-white border border-blue-400/40 shadow-[0_0_16px_rgba(59,130,246,0.3)] font-semibold')
+                  : (isLight 
+                      ? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60 border border-transparent' 
+                      : 'text-zinc-400 hover:text-white hover:bg-white/5 border border-transparent')
+              }`}
+            >
+              {portfolioMode === 'cybersecurity' ? 'Defense Philosophy (6 Axioms)' : 'Systems Philosophy (6 Axioms)'}
             </button>
             <button
               onClick={() => setActiveBioTab('credentials')}
-              className={`px-3 py-1.5 rounded-lg text-[11px] sm:text-[12px] font-medium whitespace-nowrap cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(59,130,246,0.45)] hover:border-blue-400/60 active:scale-95 active:shadow-[0_0_32px_rgba(56,189,248,0.85)] ${
+              className={`px-3 py-1.5 rounded-lg text-[11px] sm:text-[12px] font-medium whitespace-nowrap cursor-pointer transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(59,130,246,0.35)] hover:border-blue-400/50 active:scale-95 active:shadow-[0_0_28px_rgba(56,189,248,0.75)] ${
                 activeBioTab === 'credentials'
                   ? (isLight 
-                      ? 'bg-white text-zinc-900 border border-blue-400/40 shadow-[0_0_14px_rgba(59,130,246,0.25)] font-semibold' 
-                      : 'bg-zinc-800 text-white border border-blue-400/40 shadow-[0_0_16px_rgba(59,130,246,0.35)] font-semibold')
+                      ? 'bg-white text-zinc-900 border border-blue-400/40 shadow-[0_0_14px_rgba(59,130,246,0.2)] font-semibold' 
+                      : 'bg-zinc-800 text-white border border-blue-400/40 shadow-[0_0_16px_rgba(59,130,246,0.3)] font-semibold')
                   : (isLight 
                       ? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60 border border-transparent' 
                       : 'text-zinc-400 hover:text-white hover:bg-white/5 border border-transparent')
               }`}
             >
-              Credentials
+              Credentials & Track Record
             </button>
             <button
               onClick={() => setActiveBioTab('video')}
-              className={`px-3.5 py-1.5 rounded-lg text-[11px] sm:text-[12px] font-bold whitespace-nowrap cursor-pointer flex items-center gap-1.5 transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(56,189,248,0.65)] hover:border-cyan-400 active:scale-95 active:shadow-[0_0_35px_rgba(56,189,248,0.95)] ${
+              className={`px-3.5 py-1.5 rounded-lg text-[11px] sm:text-[12px] font-bold whitespace-nowrap cursor-pointer flex items-center gap-1.5 transition-all duration-500 hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(56,189,248,0.55)] hover:border-cyan-400 active:scale-95 active:shadow-[0_0_32px_rgba(56,189,248,0.75)] ${
                 activeBioTab === 'video'
                   ? (isLight 
-                      ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.45)] border border-blue-400' 
-                      : 'bg-blue-700 text-white shadow-[0_0_22px_rgba(59,130,246,0.55)] border border-blue-400')
+                      ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] border border-blue-400' 
+                      : 'bg-blue-700 text-white shadow-[0_0_22px_rgba(59,130,246,0.45)] border border-blue-400')
                   : (isLight 
                       ? 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 shadow-2xs' 
                       : 'bg-blue-950/50 text-blue-300 hover:bg-blue-900/55 border border-blue-500/30 shadow-2xs')
@@ -244,11 +289,22 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-500/20 pb-3">
                 <div className="flex items-center gap-2 text-xs sm:text-sm font-bold tracking-wide uppercase text-emerald-300">
                   <Cpu className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Executive Video Studio</span>
+                  <span>Executive Keynote & 3D Video Studio</span>
                 </div>
-                <div className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  5s Cinematic
+                <div className="flex items-center gap-2">
+                  <div className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Veo 3.1 & 3D Engine Active
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowSubtitles(!showSubtitles)}
+                    className={`px-2 py-0.5 rounded text-[10px] font-mono transition-all duration-300 border cursor-pointer ${
+                      showSubtitles ? 'bg-emerald-600 text-white border-emerald-400' : 'bg-emerald-950 text-emerald-400 border-emerald-500/30'
+                    }`}
+                  >
+                    CC {showSubtitles ? 'ON' : 'OFF'}
+                  </button>
                 </div>
               </div>
 
@@ -256,7 +312,7 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
                 <div className="space-y-3">
                   <div>
                     <label className="block text-xs font-semibold text-emerald-200 uppercase tracking-wider mb-1.5">
-                      Executive Video Style Presets:
+                      Executive Video Presets:
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2.5">
                       {VIDEO_PRESETS.map((preset) => (
@@ -265,11 +321,11 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
                           type="button"
                           onClick={() => {
                             setVideoPrompt(preset.prompt);
-                            setVideoMode(preset.type as 'veo' | 'animated');
+                            setVideoMode(preset.type as 'veo' | 'animated' | 'keynote');
                           }}
-                          className={`p-2 rounded-xl text-left border text-[11px] font-medium transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(16,185,129,0.55)] hover:border-emerald-400 active:scale-95 active:shadow-[0_0_32px_rgba(52,211,153,0.85)] ${
+                          className={`p-2 rounded-xl text-left border text-[11px] font-medium transition-all duration-500 cursor-pointer hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(16,185,129,0.45)] hover:border-emerald-400 active:scale-95 active:shadow-[0_0_28px_rgba(52,211,153,0.75)] ${
                             videoPrompt === preset.prompt
-                              ? 'bg-emerald-600 text-white border-emerald-400 shadow-[0_0_16px_rgba(16,185,129,0.45)] font-bold'
+                              ? 'bg-emerald-600 text-white border-emerald-400 shadow-[0_0_16px_rgba(16,185,129,0.35)] font-bold'
                               : 'bg-emerald-950/60 text-emerald-300 border-emerald-500/30 hover:bg-emerald-900/60'
                           }`}
                         >
@@ -277,13 +333,13 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
                             {preset.type === 'animated' ? <Film className="w-3.5 h-3.5 text-cyan-300 shrink-0" /> : <Video className="w-3.5 h-3.5 text-amber-300 shrink-0" />}
                             <span className="truncate">{preset.label}</span>
                           </div>
-                          <span className="text-[9.5px] opacity-80 block line-clamp-1">{preset.type === 'animated' ? 'Vector Motion Graphics' : 'Veo 3 AI Video'}</span>
+                          <span className="text-[9.5px] opacity-80 block line-clamp-1">{preset.type === 'animated' ? 'Vector Motion Graphics' : 'Veo 3.1 AI Stream'}</span>
                         </button>
                       ))}
                     </div>
 
                     <label className="block text-xs font-semibold text-emerald-200 uppercase tracking-wider mb-1.5">
-                      Executive Video Prompt (Veo 3 & Motion Engine)
+                      Executive Video Prompt (Veo 3.1 & Motion Engine)
                     </label>
                     <textarea
                       value={videoPrompt}
@@ -303,20 +359,20 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
                         <button
                           type="button"
                           onClick={() => setVideoMode('veo')}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 cursor-pointer hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(16,185,129,0.6)] hover:border-emerald-400 active:scale-95 active:shadow-[0_0_30px_rgba(52,211,153,0.9)] ${
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-500 cursor-pointer hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:border-emerald-400 active:scale-95 active:shadow-[0_0_28px_rgba(52,211,153,0.8)] ${
                             videoMode === 'veo'
-                              ? 'bg-emerald-600 text-white shadow-[0_0_16px_rgba(16,185,129,0.5)] border border-emerald-400'
+                              ? 'bg-emerald-600 text-white shadow-[0_0_16px_rgba(16,185,129,0.4)] border border-emerald-400'
                               : 'bg-emerald-900/40 text-emerald-300 border border-emerald-500/25 hover:bg-emerald-900/70'
                           }`}
                         >
-                          Veo 3 Stream
+                          Veo 3.1 Stream
                         </button>
                         <button
                           type="button"
                           onClick={() => setVideoMode('animated')}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 cursor-pointer hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(6,182,212,0.6)] hover:border-cyan-400 active:scale-95 active:shadow-[0_0_30px_rgba(34,211,238,0.9)] ${
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-500 cursor-pointer hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(6,182,212,0.5)] hover:border-cyan-400 active:scale-95 active:shadow-[0_0_28px_rgba(34,211,238,0.8)] ${
                             videoMode === 'animated'
-                              ? 'bg-cyan-600 text-white shadow-[0_0_16px_rgba(6,182,212,0.5)] border border-cyan-400'
+                              ? 'bg-cyan-600 text-white shadow-[0_0_16px_rgba(6,182,212,0.4)] border border-cyan-400'
                               : 'bg-emerald-900/40 text-emerald-300 border border-emerald-500/25 hover:bg-emerald-900/70'
                           }`}
                         >
@@ -325,12 +381,22 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
                       </div>
                     </div>
 
+                    <div className="flex items-center gap-2 pt-4">
+                      <button
+                        type="button"
+                        onClick={() => setVideoAspectRatio(videoAspectRatio === '16:9' ? '9:16' : '16:9')}
+                        className="px-3 py-1.5 rounded-lg bg-emerald-900/60 border border-emerald-500/30 text-emerald-300 text-xs font-mono hover:bg-emerald-800 cursor-pointer transition-all duration-300"
+                      >
+                        Aspect: {videoAspectRatio}
+                      </button>
+                    </div>
+
                     <div className="flex-1 text-right pt-4">
                       <button
                         type="button"
                         disabled={isGeneratingVideo}
                         onClick={handleGenerateVideo}
-                        className="relative group w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-600/30 border border-emerald-400/50 transition-all duration-300 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 hover:scale-[1.03] hover:shadow-[0_0_28px_rgba(16,185,129,0.7),0_0_55px_rgba(20,184,166,0.4)] hover:border-emerald-300 active:scale-95 active:shadow-[0_0_40px_rgba(52,211,153,0.95),0_0_75px_rgba(16,185,129,0.7)]"
+                        className="relative group w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-600/30 border border-emerald-400/50 transition-all duration-500 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 hover:scale-[1.03] hover:shadow-[0_0_24px_rgba(16,185,129,0.6),0_0_45px_rgba(20,184,166,0.35)] hover:border-emerald-300 active:scale-95 active:shadow-[0_0_36px_rgba(52,211,153,0.85)]"
                       >
                         {isGeneratingVideo ? (
                           <>
@@ -384,23 +450,48 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
                           </div>
 
                           <h4 className="text-sm sm:text-base font-extrabold text-white tracking-tight drop-shadow-md">
-                            {activeAnimatedScene === 0 && "1. Identity is the Sole Perimeter"}
-                            {activeAnimatedScene === 1 && "2. Defense-in-Depth Architecture"}
-                            {activeAnimatedScene === 2 && "3. Continuous Verification & Zero Trust"}
-                            {activeAnimatedScene === 3 && "4. Defensive AI Asymmetry (AISP)"}
-                            {activeAnimatedScene === 4 && "5. Guardrails Over Gates"}
-                            {activeAnimatedScene === 5 && "6. Post-Quantum Cryptographic Agility"}
+                            {portfolioMode === 'cybersecurity' ? [
+                              "1. Identity is the Sole Perimeter",
+                              "2. Defense-in-Depth Architecture",
+                              "3. Continuous Verification & Zero Trust",
+                              "4. Defensive AI Asymmetry (AISP)",
+                              "5. Guardrails Over Gates",
+                              "6. Post-Quantum Cryptographic Agility"
+                            ][activeAnimatedScene] : [
+                              "1. Empirical Rigor & Reproducibility",
+                              "2. Distributed Compute Elasticity",
+                              "3. Low-Latency Inference Efficiency",
+                              "4. Autonomous Multi-Agent Tool Trust",
+                              "5. Deterministic Guardrails & Safety",
+                              "6. Continuous Drift & Feedback Loops"
+                            ][activeAnimatedScene]}
                           </h4>
 
                           <p className="text-[11px] text-cyan-200/90 max-w-md mx-auto font-sans leading-relaxed">
-                            {activeAnimatedScene === 0 && "Ephemeral, Just-In-Time (JIT) access with zero standing privilege across all workloads."}
-                            {activeAnimatedScene === 1 && "Multi-layered defensive controls ensuring zero single points of failure across edge to application."}
-                            {activeAnimatedScene === 2 && "Never trust, always cryptographically verify every API token, workload identity, and user session."}
-                            {activeAnimatedScene === 3 && "Automated machine intelligence containment with tokenized LLM security pipelines."}
-                            {activeAnimatedScene === 4 && "Business velocity through developer policy-as-code guardrails and automated security gates."}
-                            {activeAnimatedScene === 5 && "Future-proofing enterprise PKI with algorithm agility and post-quantum lattice encryption."}
+                            {portfolioMode === 'cybersecurity' ? [
+                              "Ephemeral, Just-In-Time (JIT) access with zero standing privilege across all workloads.",
+                              "Multi-layered defensive controls ensuring zero single points of failure across edge to application.",
+                              "Never trust, always cryptographically verify every API token, workload identity, and user session.",
+                              "Automated machine intelligence containment with tokenized LLM security pipelines.",
+                              "Business velocity through developer policy-as-code guardrails and automated security gates.",
+                              "Future-proofing enterprise PKI with algorithm agility and post-quantum lattice encryption."
+                            ][activeAnimatedScene] : [
+                              "Statistical verification and reproducible weights lock replacing heuristic guesswork.",
+                              "PyTorch FSDP and DeepSpeed ZeRO scaling across 512x H100 GPU clusters.",
+                              "Sub-15ms p99 latency via continuous batching and Paged KV-Cache attention.",
+                              "Deterministic tool boundary contracts for autonomous multi-agent reasoning graphs.",
+                              "Dual-layer real-time prompt injection defense and self-reflective alignment.",
+                              "Embedding drift telemetry and automated feature store model retraining."
+                            ][activeAnimatedScene]}
                           </p>
                         </div>
+
+                        {/* Subtitles Overlay */}
+                        {showSubtitles && (
+                          <div className="relative z-10 mx-auto px-3 py-1 rounded bg-black/80 border border-cyan-500/30 text-[10.5px] font-mono text-cyan-300 text-center max-w-md">
+                            {KEYNOTE_TRANSCRIPTS[activeAnimatedScene % KEYNOTE_TRANSCRIPTS.length]}
+                          </div>
+                        )}
 
                         {/* Interactive Scene Navigation Controls */}
                         <div className="relative z-10 flex items-center justify-between gap-2 border-t border-cyan-500/30 pt-2.5">
@@ -441,7 +532,7 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
                           controls
                           autoPlay
                           loop
-                          muted
+                          muted={isMuted}
                           playsInline
                           onLoadedData={() => {
                             setVideoError(null);
@@ -455,8 +546,15 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
                         />
                         <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/70 border border-emerald-500/40 text-[10px] font-mono text-emerald-300 pointer-events-none flex items-center gap-1.5 z-10">
                           <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                          VEO-3.1 PREVIEW • 4K CISO KEYNOTE
+                          VEO-3.1 PREVIEW • 4K KEYNOTE STREAM
                         </div>
+
+                        {showSubtitles && (
+                          <div className="absolute bottom-10 left-4 right-4 px-3 py-1 rounded bg-black/80 border border-emerald-500/40 text-[11px] font-mono text-emerald-300 text-center z-10">
+                            {KEYNOTE_TRANSCRIPTS[Math.floor((videoProgress / 100) * KEYNOTE_TRANSCRIPTS.length) % KEYNOTE_TRANSCRIPTS.length]}
+                          </div>
+                        )}
+
                         {videoError && (
                           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-emerald-300 p-4 text-center z-10 gap-2">
                             <span className="text-xs font-mono">{videoError}</span>
@@ -466,7 +564,7 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
                                 setVideoUrl('/videos/executive-preview.mp4');
                                 setVideoError(null);
                               }}
-                              className="px-3 py-1 rounded bg-emerald-600 text-white text-[11px] font-mono hover:bg-emerald-500 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(16,185,129,0.7)] active:scale-95 active:shadow-[0_0_30px_rgba(52,211,153,0.9)]"
+                              className="px-3 py-1 rounded bg-emerald-600 text-white text-[11px] font-mono hover:bg-emerald-500 cursor-pointer transition-all duration-500 hover:scale-105 hover:shadow-[0_0_20px_rgba(16,185,129,0.7)] active:scale-95 active:shadow-[0_0_30px_rgba(52,211,153,0.9)]"
                             >
                               Reload Local Stream
                             </button>
@@ -475,9 +573,16 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
                       </div>
                     )}
                   </div>
-                  <span className="text-[10px] font-mono text-emerald-400/70">
-                    {videoMode === 'animated' ? '' : `Model: veo-3.1-lite-generate-preview • Aspect Ratio: ${videoAspectRatio}`}
-                  </span>
+                  <div className="w-full flex items-center justify-between text-[10px] font-mono text-emerald-400/80 px-1">
+                    <span>{videoMode === 'animated' ? 'Mode: 3D Motion Axioms' : `Model: veo-3.1-generate-preview • Aspect: ${videoAspectRatio}`}</span>
+                    <button
+                      type="button"
+                      onClick={() => setIsMuted(!isMuted)}
+                      className="hover:text-emerald-200 cursor-pointer transition-colors"
+                    >
+                      {isMuted ? '🔇 Audio Muted' : '🔊 Audio Active'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -489,7 +594,15 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
           <div className="space-y-4 tab-pane-animate">
             <div className="space-y-3">
               <p className={`text-sm sm:text-base lg:text-md font-semibold leading-relaxed ${isLight ? 'text-zinc-950' : 'text-zinc-50'}`}>
-                AI Executive & Principal Systems Architect with <span className="text-blue-500 font-bold">21+ years</span> building production-grade Machine Learning, Distributed Deep Learning, Data Science platforms, and GenAI infrastructure across Goldman Sachs and global tech leaders.
+                {portfolioMode === 'cybersecurity' ? (
+                  <>
+                    Principal Cybersecurity & IAM Architect with <span className="text-blue-500 font-bold">21+ years</span> protecting Fortune 100 infrastructures, modernizing identity fabrics, and aligning digital defense with enterprise risk governance across Goldman Sachs and global tech leaders.
+                  </>
+                ) : (
+                  <>
+                    AI Executive & Principal Systems Architect with <span className="text-blue-500 font-bold">21+ years</span> building production-grade Machine Learning, Distributed Deep Learning, Data Science platforms, and GenAI infrastructure across Goldman Sachs and global tech leaders.
+                  </>
+                )}
               </p>
               
               {/* Horizontal 3 Points Grid */}
@@ -498,9 +611,13 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
                   <div className="flex items-start gap-2">
                     <span className="text-blue-500 font-bold text-lg leading-none shrink-0">•</span>
                     <div>
-                      <span className={`font-bold text-[11px] uppercase tracking-wider block mb-1.5 ${isLight ? 'text-blue-700' : 'text-blue-400'}`}>Enterprise AI Strategy</span>
+                      <span className={`font-bold text-[11px] uppercase tracking-wider block mb-1.5 ${isLight ? 'text-blue-700' : 'text-blue-400'}`}>
+                        {portfolioMode === 'cybersecurity' ? 'Enterprise Cyber Strategy' : 'Enterprise AI Strategy'}
+                      </span>
                       <span className={`text-[12px] leading-relaxed ${isLight ? 'text-zinc-700' : 'text-zinc-400'}`}>
-                        Directed GenAI Foundation Model adoption, Autonomous Multi-Agent fabrics, and Tier-1 quantitative ML platforms.
+                        {portfolioMode === 'cybersecurity'
+                          ? 'Directed Zero Trust Architecture (NIST 800-207), enterprise IAM consolidation (5M+ identities), and multi-cloud perimeter defense.'
+                          : 'Directed GenAI Foundation Model adoption, Autonomous Multi-Agent fabrics, and Tier-1 quantitative ML platforms.'}
                       </span>
                     </div>
                   </div>
@@ -512,7 +629,9 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
                     <div>
                       <span className={`font-bold text-[11px] uppercase tracking-wider block mb-1.5 ${isLight ? 'text-indigo-700' : 'text-indigo-400'}`}>Global Leadership</span>
                       <span className={`text-[12px] leading-relaxed ${isLight ? 'text-zinc-700' : 'text-zinc-400'}`}>
-                        Led 35+ data scientists, ML engineers, and MLOps architects managing $25M+ in GPU compute and distributed infrastructure.
+                        {portfolioMode === 'cybersecurity'
+                          ? 'Led 30+ cybersecurity & IAM engineers, security analysts, and compliance specialists managing an $18.5M enterprise defense portfolio.'
+                          : 'Led 35+ data scientists, ML engineers, and MLOps architects managing $25M+ in GPU compute and distributed infrastructure.'}
                       </span>
                     </div>
                   </div>
@@ -522,9 +641,13 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
                   <div className="flex items-start gap-2">
                     <span className="text-emerald-500 font-bold text-lg leading-none shrink-0">•</span>
                     <div>
-                      <span className={`font-bold text-[11px] uppercase tracking-wider block mb-1.5 ${isLight ? 'text-emerald-700' : 'text-emerald-400'}`}>Model Governance & Safety</span>
+                      <span className={`font-bold text-[11px] uppercase tracking-wider block mb-1.5 ${isLight ? 'text-emerald-700' : 'text-emerald-400'}`}>
+                        {portfolioMode === 'cybersecurity' ? 'Supervisory & Audit GRC' : 'Model Governance & Safety'}
+                      </span>
                       <span className={`text-[12px] leading-relaxed ${isLight ? 'text-zinc-700' : 'text-zinc-400'}`}>
-                        Institutionalized NIST AI RMF, Federal Reserve SR 11-7 model risk compliance, and deterministic hallucination guardrails.
+                        {portfolioMode === 'cybersecurity'
+                          ? 'Achieved 3+ consecutive years of zero material SOX 404 audit findings and 100% clean supervisory examination records.'
+                          : 'Institutionalized NIST AI RMF, Federal Reserve SR 11-7 model risk compliance, and deterministic hallucination guardrails.'}
                       </span>
                     </div>
                   </div>
@@ -540,12 +663,16 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
               }`}>
                 <div className="flex items-center space-x-2 mb-1">
                   <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-500 text-white flex items-center justify-center shadow-sm shrink-0">
-                    <Brain className="w-3.5 h-3.5" />
+                    {portfolioMode === 'cybersecurity' ? <Shield className="w-3.5 h-3.5" /> : <Brain className="w-3.5 h-3.5" />}
                   </div>
-                  <div className={`font-bold text-[10.5px] sm:text-[12px] truncate ${isLight ? 'text-zinc-900' : 'text-zinc-100'}`}>LLMs & GenAI Systems</div>
+                  <div className={`font-bold text-[10.5px] sm:text-[12px] truncate ${isLight ? 'text-zinc-900' : 'text-zinc-100'}`}>
+                    {portfolioMode === 'cybersecurity' ? 'Enterprise IAM & Federation' : 'LLMs & GenAI Systems'}
+                  </div>
                 </div>
                 <div className={`text-[10px] leading-relaxed ${isLight ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                  Foundation model fine-tuning (LoRA, DPO), multi-agent reasoning graphs (LangGraph), and high-throughput vLLM serving.
+                  {portfolioMode === 'cybersecurity'
+                    ? '5M+ workforce & cloud identities, OAuth 2.0/OIDC/SAML federation, SCIM 2.0 lifecycle, and Entra ID/Okta governance.'
+                    : 'Foundation model fine-tuning (LoRA, DPO), multi-agent reasoning graphs (LangGraph), and high-throughput vLLM serving.'}
                 </div>
               </div>
 
@@ -556,12 +683,16 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
               }`}>
                 <div className="flex items-center space-x-2 mb-1">
                   <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-600 text-white flex items-center justify-center shadow-sm shrink-0">
-                    <Cpu className="w-3.5 h-3.5" />
+                    {portfolioMode === 'cybersecurity' ? <Lock className="w-3.5 h-3.5" /> : <Cpu className="w-3.5 h-3.5" />}
                   </div>
-                  <div className={`font-bold text-[10.5px] sm:text-[12px] truncate ${isLight ? 'text-zinc-900' : 'text-zinc-100'}`}>Distributed GPU Compute</div>
+                  <div className={`font-bold text-[10.5px] sm:text-[12px] truncate ${isLight ? 'text-zinc-900' : 'text-zinc-100'}`}>
+                    {portfolioMode === 'cybersecurity' ? 'Zero Trust & PAM (ZSP)' : 'Distributed GPU Compute'}
+                  </div>
                 </div>
                 <div className={`text-[10px] leading-relaxed ${isLight ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                  512x H100 GPU cluster orchestration with PyTorch FSDP, DeepSpeed ZeRO, Slurm, and low-latency RoCE v2 network fabric.
+                  {portfolioMode === 'cybersecurity'
+                    ? 'NIST 800-207 architecture, CyberArk PAM session isolation, FIDO2 passwordless MFA, and -98.4% standing privileges.'
+                    : '512x H100 GPU cluster orchestration with PyTorch FSDP, DeepSpeed ZeRO, Slurm, and low-latency RoCE v2 network fabric.'}
                 </div>
               </div>
 
@@ -572,12 +703,16 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
               }`}>
                 <div className="flex items-center space-x-2 mb-1">
                   <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-purple-600 to-fuchsia-500 text-white flex items-center justify-center shadow-sm shrink-0">
-                    <Network className="w-3.5 h-3.5" />
+                    {portfolioMode === 'cybersecurity' ? <Network className="w-3.5 h-3.5" /> : <Network className="w-3.5 h-3.5" />}
                   </div>
-                  <div className={`font-bold text-[10.5px] sm:text-[12px] truncate ${isLight ? 'text-zinc-900' : 'text-zinc-100'}`}>MLOps & Feature Stores</div>
+                  <div className={`font-bold text-[10.5px] sm:text-[12px] truncate ${isLight ? 'text-zinc-900' : 'text-zinc-100'}`}>
+                    {portfolioMode === 'cybersecurity' ? 'Multi-Cloud & Enclave Defense' : 'MLOps & Feature Stores'}
+                  </div>
                 </div>
                 <div className={`text-[10px] leading-relaxed ${isLight ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                  Automated Kubeflow CI/CD pipelines, Triton Inference Server scaling, real-time Feast feature registries, and continuous drift monitoring.
+                  {portfolioMode === 'cybersecurity'
+                    ? 'AWS/Azure CSPM, trading enclave micro-segmentation, SASE edge isolation, and Enterprise PKI/HSM cryptography.'
+                    : 'Automated Kubeflow CI/CD pipelines, Triton Inference Server scaling, real-time Feast feature registries, and continuous drift monitoring.'}
                 </div>
               </div>
 
@@ -590,10 +725,14 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
                   <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-sm shrink-0">
                     <Scale className="w-3.5 h-3.5" />
                   </div>
-                  <div className={`font-bold text-[10.5px] sm:text-[12px] truncate ${isLight ? 'text-zinc-900' : 'text-zinc-100'}`}>AI Risk, Safety & GRC</div>
+                  <div className={`font-bold text-[10.5px] sm:text-[12px] truncate ${isLight ? 'text-zinc-900' : 'text-zinc-100'}`}>
+                    {portfolioMode === 'cybersecurity' ? 'Regulatory GRC & Supervisory' : 'AI Risk, Safety & GRC'}
+                  </div>
                 </div>
                 <div className={`text-[10px] leading-relaxed ${isLight ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                  NIST AI RMF compliance, OWASP LLM Top 10 red teaming, real-time hallucination mitigation, and algorithmic bias auditing.
+                  {portfolioMode === 'cybersecurity'
+                    ? 'US Fed/PRA supervisory defense, SOX 404 access controls, ISO 27001/SOC 2 audits, and quantitative FAIR™ risk modeling.'
+                    : 'NIST AI RMF compliance, OWASP LLM Top 10 red teaming, real-time hallucination mitigation, and algorithmic bias auditing.'}
                 </div>
               </div>
             </div>
@@ -696,285 +835,159 @@ export const ExecutiveBio: React.FC<ExecutiveBioProps> = ({ theme = 'apple-light
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-2 border-b border-zinc-100 dark:border-white/5">
               <div>
                 <h4 className={`text-xs sm:text-sm font-bold tracking-tight ${isLight ? 'text-zinc-900' : 'text-white'}`}>
-                  The 6 Axioms of Enterprise AI, Machine Learning & Scalable Data Science
+                  {portfolioMode === 'cybersecurity'
+                    ? 'The 6 Axioms of Enterprise Cybersecurity, Zero Trust Architecture & Risk Governance'
+                    : 'The 6 Axioms of Enterprise AI, Machine Learning & Scalable Data Science'}
                 </h4>
                 <p className={`text-[11px] ${isLight ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                  Codified principles uniting mathematical rigor, distributed GPU compute, autonomous agentic reliability, and deterministic safety.
+                  {portfolioMode === 'cybersecurity'
+                    ? 'Codified principles uniting identity boundaries, defense-in-depth, continuous verification, defensive AI asymmetry, and cryptographic agility.'
+                    : 'Codified principles uniting mathematical rigor, distributed GPU compute, autonomous agentic reliability, and deterministic safety.'}
                 </p>
               </div>
               <div className="shrink-0 flex items-center gap-1.5">
                 <span className={`text-[10px] font-semibold tracking-wider uppercase px-2.5 py-0.5 rounded-full border ${
                   isLight ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-blue-950/40 border-blue-800/40 text-blue-300'
                 }`}>
-                  AI Systems Charter
+                  {portfolioMode === 'cybersecurity' ? 'CISO Systems Charter' : 'AI Systems Charter'}
                 </span>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 sm:gap-x-5 gap-y-2.5 sm:gap-y-3">
-              {/* Axiom 1: Empirical Scientific Rigor */}
-              <div className={`px-3.5 py-2.5 rounded-2xl border flex flex-col justify-between transition-all duration-300 relative overflow-hidden interactive-card ${
-                isLight 
-                  ? 'bg-gradient-to-br from-white via-indigo-50/40 to-white border-indigo-300/90 hover:border-indigo-500 shadow-[0_4px_20px_rgba(99,102,241,0.12)]' 
-                  : 'bg-gradient-to-br from-zinc-900/90 via-[#0a0c24] to-zinc-950 border-indigo-500/40 hover:border-indigo-400/80 shadow-[0_4px_28px_rgba(0,0,0,0.6)]'
-              }`}>
-                <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-sky-400 via-blue-600 to-indigo-950 opacity-95" />
-                <div className="absolute top-0 left-0 w-36 h-8 bg-gradient-to-r from-blue-500/20 via-sky-400/10 to-transparent blur-md pointer-events-none" />
+              {(portfolioMode === 'cybersecurity' ? [
+                {
+                  num: '1.',
+                  title: 'Identity is the Sole Enterprise Perimeter',
+                  icon: <Lock className="w-3.5 h-3.5 drop-shadow-xs" />,
+                  desc: 'Heuristic network boundaries have dissolved. Every human, machine, service mesh pod, and API request must authenticate through context-aware Zero Trust brokers with Just-in-Time (JIT) ephemeral entitlement.',
+                  enforcement: 'NIST 800-207 + SailPoint + CyberArk',
+                },
+                {
+                  num: '2.',
+                  title: 'Multi-Enclave Defense-in-Depth & Non-Repudiation',
+                  icon: <Shield className="w-3.5 h-3.5 drop-shadow-xs" />,
+                  desc: 'Never rely on a single defensive boundary. Enforce micro-segmented cloud trading enclaves, hardware-root-of-trust HSM signing, immutable audit trails, and kernel-level eBPF packet inspection across all tiers.',
+                  enforcement: 'FIPS 140-3 HSM + Cilium eBPF',
+                },
+                {
+                  num: '3.',
+                  title: 'Continuous Verification & Zero Standing Privilege',
+                  icon: <Key className="w-3.5 h-3.5 drop-shadow-xs" />,
+                  desc: 'Eliminate 24/7 standing administrative access. Enforce continuous risk-based session evaluation, phishing-resistant FIDO2 WebAuthn MFA, and CAEP dynamic token revocation upon contextual anomaly.',
+                  enforcement: 'FIDO2 WebAuthn + CAEP Signals',
+                },
+                {
+                  num: '4.',
+                  title: 'Defensive AI Asymmetry & Data Security (DSPM)',
+                  icon: <Brain className="w-3.5 h-3.5 drop-shadow-xs" />,
+                  desc: 'Protect enterprise intellectual property against prompt injection, model extraction, and data poisoning. Deploy inline tokenized LLM security gateways, synthetic data masking, and real-time DLP filters.',
+                  enforcement: 'Sub-18ms DLP + NIST AI RMF',
+                },
+                {
+                  num: '5.',
+                  title: 'Policy-as-Code & Automated Drift Remediation',
+                  icon: <CheckCircle2 className="w-3.5 h-3.5 drop-shadow-xs" />,
+                  desc: 'Security posture must be immutable, declarative, and embedded directly into CI/CD. Every infrastructure pull request and IAM policy update is validated by automated Sentinel and Open Policy Agent (OPA) gates.',
+                  enforcement: 'Terraform Sentinel + OPA Gates',
+                },
+                {
+                  num: '6.',
+                  title: 'Post-Quantum Cryptographic Agility',
+                  icon: <Lock className="w-3.5 h-3.5 drop-shadow-xs" />,
+                  desc: 'Harden critical transactions and sovereign data against harvest-now-decrypt-later adversaries. Deploy algorithm-agile hybrid key encapsulation (ML-KEM-768) and post-quantum digital signatures across enterprise PKI.',
+                  enforcement: 'NIST FIPS 203 (ML-KEM-768)',
+                },
+              ] : [
+                {
+                  num: '1.',
+                  title: 'Empirical Rigor & Reproducibility',
+                  icon: <Brain className="w-3.5 h-3.5 drop-shadow-xs" />,
+                  desc: 'Heuristic intuition must yield to statistical verification. Every model weights artifact, dataset hash, random seed, and evaluation metric must be reproducibly tracked and versioned.',
+                  enforcement: 'MLflow + PyTorch Seed Lock',
+                },
+                {
+                  num: '2.',
+                  title: 'Distributed Compute Elasticity',
+                  icon: <Cpu className="w-3.5 h-3.5 drop-shadow-xs" />,
+                  desc: 'High-parameter models require hardware-native cluster orchestration. Parallelism schemes (tensor, pipeline, sequence) must saturate GPU cores while eliminating network bottlenecks.',
+                  enforcement: '512x H100 Slurm + DeepSpeed',
+                },
+                {
+                  num: '3.',
+                  title: 'Low-Latency Inference Efficiency',
+                  icon: <Sparkles className="w-3.5 h-3.5 drop-shadow-xs" />,
+                  desc: 'Large models are unusable without predictable sub-15ms p99 serving latency. Continuous batching, paged KV-cache attention, and speculative drafting unlock enterprise real-time execution.',
+                  enforcement: 'vLLM + TensorRT-LLM PagedAttn',
+                },
+                {
+                  num: '4.',
+                  title: 'Autonomous Multi-Agent Tool Trust',
+                  icon: <Network className="w-3.5 h-3.5 drop-shadow-xs" />,
+                  desc: 'Autonomous agentic swarms must execute within deterministic boundary contracts. Every external tool invocation, database mutation, and API call requires explicit validation and schema gating.',
+                  enforcement: 'LangGraph + Tool Boundary Contracts',
+                },
+                {
+                  num: '5.',
+                  title: 'Deterministic Guardrails & Safety',
+                  icon: <Shield className="w-3.5 h-3.5 drop-shadow-xs" />,
+                  desc: 'Generative models are probabilistic by nature. Enterprise safety requires dual-layer deterministic filtering: real-time prompt injection defense and self-reflective verification.',
+                  enforcement: 'NIST AI RMF + NeMo Guardrails',
+                },
+                {
+                  num: '6.',
+                  title: 'Continuous Drift & Feedback Loops',
+                  icon: <Database className="w-3.5 h-3.5 drop-shadow-xs" />,
+                  desc: 'Models in static isolation decay under real-world distribution shift. Production intelligence requires automated embedding drift telemetry, online feature registries, and continuous canary validation.',
+                  enforcement: 'Feature Stores + Embedding Drift',
+                },
+              ]).map((axiom, idx) => (
+                <div 
+                  key={idx}
+                  className={`px-3.5 py-2.5 rounded-2xl border flex flex-col justify-between transition-all duration-300 relative overflow-hidden interactive-card ${
+                    isLight 
+                      ? 'bg-gradient-to-br from-white via-indigo-50/40 to-white border-indigo-300/90 hover:border-indigo-500 shadow-[0_4px_20px_rgba(99,102,241,0.12)]' 
+                      : 'bg-gradient-to-br from-zinc-900/90 via-[#0a0c24] to-zinc-950 border-indigo-500/40 hover:border-indigo-400/80 shadow-[0_4px_28px_rgba(0,0,0,0.6)]'
+                  }`}
+                >
+                  <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-sky-400 via-blue-600 to-indigo-950 opacity-95" />
+                  <div className="absolute top-0 left-0 w-36 h-8 bg-gradient-to-r from-blue-500/20 via-sky-400/10 to-transparent blur-md pointer-events-none" />
 
-                <div>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <div className={`w-7 h-7 rounded-xl border flex items-center justify-center shrink-0 transition-all ${
-                      isLight 
-                        ? 'bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50/50 border-blue-200 text-blue-700 shadow-[0_2px_8px_rgba(37,99,235,0.08)]' 
-                        : 'bg-gradient-to-br from-blue-500/20 via-indigo-500/10 to-transparent border-blue-400/35 text-blue-300 shadow-[0_2px_12px_rgba(59,130,246,0.18)]'
-                    }`}>
-                      <Brain className="w-3.5 h-3.5 drop-shadow-xs" />
+                  <div>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <div className={`w-7 h-7 rounded-xl border flex items-center justify-center shrink-0 transition-all ${
+                        isLight 
+                          ? 'bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50/50 border-blue-200 text-blue-700 shadow-[0_2px_8px_rgba(37,99,235,0.08)]' 
+                          : 'bg-gradient-to-br from-blue-500/20 via-indigo-500/10 to-transparent border-blue-400/35 text-blue-300 shadow-[0_2px_12px_rgba(59,130,246,0.18)]'
+                      }`}>
+                        {axiom.icon}
+                      </div>
+                      <div className="relative flex-1 py-1.5 px-3 rounded-xl overflow-hidden bg-gradient-to-r from-sky-400 via-blue-700 to-[#020617] border border-blue-400/40 shadow-[0_4px_16px_rgba(10,25,47,0.3),inset_0_1px_1px_rgba(255,255,255,0.22)] text-white min-w-0">
+                        <div className="absolute inset-0 bg-gradient-to-b from-white/15 via-transparent to-black/20 pointer-events-none" />
+                        <div className="absolute -top-3 -left-3 w-16 h-12 bg-sky-400/25 rounded-full blur-md pointer-events-none" />
+                        <strong className="relative z-10 text-[12px] sm:text-[12.5px] font-bold tracking-tight text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] flex items-center gap-1.5">
+                          <span className="text-sky-300 font-mono font-bold text-[11.5px] opacity-95">{axiom.num}</span>
+                          <span className="leading-snug truncate">{axiom.title}</span>
+                        </strong>
+                      </div>
                     </div>
-                    <div className="relative flex-1 py-1.5 px-3 rounded-xl overflow-hidden bg-gradient-to-r from-sky-400 via-blue-700 to-[#020617] border border-blue-400/40 shadow-[0_4px_16px_rgba(10,25,47,0.3),inset_0_1px_1px_rgba(255,255,255,0.22)] text-white min-w-0">
-                      <div className="absolute inset-0 bg-gradient-to-b from-white/15 via-transparent to-black/20 pointer-events-none" />
-                      <div className="absolute -top-3 -left-3 w-16 h-12 bg-sky-400/25 rounded-full blur-md pointer-events-none" />
-                      <strong className="relative z-10 text-[12px] sm:text-[12.5px] font-bold tracking-tight text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] flex items-center gap-1.5">
-                        <span className="text-sky-300 font-mono font-bold text-[11.5px] opacity-95">1.</span>
-                        <span className="leading-snug">Empirical Rigor & Reproducibility</span>
-                      </strong>
-                    </div>
+                    <p className={`text-[10.5px] sm:text-[11px] leading-relaxed ${isLight ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                      {axiom.desc}
+                    </p>
                   </div>
-                  <p className={`text-[10.5px] sm:text-[11px] leading-relaxed ${isLight ? 'text-zinc-700' : 'text-zinc-300'}`}>
-                    Heuristic intuition must yield to statistical verification. Every model weights artifact, dataset hash, random seed, and evaluation metric must be reproducibly tracked and versioned.
-                  </p>
-                </div>
 
-                <div className={`flex items-center justify-between text-[10px] font-mono mt-2 pt-2 border-t ${
-                  isLight ? 'text-zinc-600 border-indigo-100' : 'text-zinc-400 border-white/10'
-                }`}>
-                  <span className="opacity-80">Enforcement:</span>
-                  <span className={`px-2 py-0.5 rounded-md font-semibold ${
-                    isLight ? 'bg-indigo-50 text-indigo-800 border border-indigo-200' : 'bg-indigo-950/70 text-indigo-200 border border-indigo-800/60'
+                  <div className={`flex items-center justify-between text-[10px] font-mono mt-2 pt-2 border-t ${
+                    isLight ? 'text-zinc-600 border-indigo-100' : 'text-zinc-400 border-white/10'
                   }`}>
-                    MLflow + PyTorch Seed Lock
-                  </span>
-                </div>
-              </div>
-
-              {/* Axiom 2: Distributed Foundations & Compute Elasticity */}
-              <div className={`px-3.5 py-2.5 rounded-2xl border flex flex-col justify-between transition-all duration-300 relative overflow-hidden interactive-card ${
-                isLight 
-                  ? 'bg-gradient-to-br from-white via-indigo-50/40 to-white border-indigo-300/90 hover:border-indigo-500 shadow-[0_4px_20px_rgba(99,102,241,0.12)]' 
-                  : 'bg-gradient-to-br from-zinc-900/90 via-[#0a0c24] to-zinc-950 border-indigo-500/40 hover:border-indigo-400/80 shadow-[0_4px_28px_rgba(0,0,0,0.6)]'
-              }`}>
-                <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-sky-400 via-blue-600 to-indigo-950 opacity-95" />
-                <div className="absolute top-0 left-0 w-36 h-8 bg-gradient-to-r from-blue-500/20 via-sky-400/10 to-transparent blur-md pointer-events-none" />
-
-                <div>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <div className={`w-7 h-7 rounded-xl border flex items-center justify-center shrink-0 transition-all ${
-                      isLight 
-                        ? 'bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50/50 border-blue-200 text-blue-700 shadow-[0_2px_8px_rgba(37,99,235,0.08)]' 
-                        : 'bg-gradient-to-br from-blue-500/20 via-indigo-500/10 to-transparent border-blue-400/35 text-blue-300 shadow-[0_2px_12px_rgba(59,130,246,0.18)]'
+                    <span className="opacity-80">Enforcement:</span>
+                    <span className={`px-2 py-0.5 rounded-md font-semibold ${
+                      isLight ? 'bg-indigo-50 text-indigo-800 border border-indigo-200' : 'bg-indigo-950/70 text-indigo-200 border border-indigo-800/60'
                     }`}>
-                      <Cpu className="w-3.5 h-3.5 drop-shadow-xs" />
-                    </div>
-                    <div className="relative flex-1 py-1.5 px-3 rounded-xl overflow-hidden bg-gradient-to-r from-sky-400 via-blue-700 to-[#020617] border border-blue-400/40 shadow-[0_4px_16px_rgba(10,25,47,0.3),inset_0_1px_1px_rgba(255,255,255,0.22)] text-white min-w-0">
-                      <div className="absolute inset-0 bg-gradient-to-b from-white/15 via-transparent to-black/20 pointer-events-none" />
-                      <div className="absolute -top-3 -left-3 w-16 h-12 bg-sky-400/25 rounded-full blur-md pointer-events-none" />
-                      <strong className="relative z-10 text-[12px] sm:text-[12.5px] font-bold tracking-tight text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] flex items-center gap-1.5">
-                        <span className="text-sky-300 font-mono font-bold text-[11.5px] opacity-95">2.</span>
-                        <span className="leading-snug">Distributed Compute Elasticity</span>
-                      </strong>
-                    </div>
+                      {axiom.enforcement}
+                    </span>
                   </div>
-                  <p className={`text-[10.5px] sm:text-[11px] leading-relaxed ${isLight ? 'text-zinc-700' : 'text-zinc-300'}`}>
-                    High-parameter models require hardware-native cluster orchestration. Parallelism schemes (tensor, pipeline, sequence) must saturate GPU cores while eliminating network bottlenecks.
-                  </p>
                 </div>
-
-                <div className={`flex items-center justify-between text-[10px] font-mono mt-2 pt-2 border-t ${
-                  isLight ? 'text-zinc-600 border-indigo-100' : 'text-zinc-400 border-white/10'
-                }`}>
-                  <span className="opacity-80">Enforcement:</span>
-                  <span className={`px-2 py-0.5 rounded-md font-semibold ${
-                    isLight ? 'bg-indigo-50 text-indigo-800 border border-indigo-200' : 'bg-indigo-950/70 text-indigo-200 border border-indigo-800/60'
-                  }`}>
-                    512x H100 Slurm + DeepSpeed
-                  </span>
-                </div>
-              </div>
-
-              {/* Axiom 3: Low-Latency Inference Efficiency */}
-              <div className={`px-3.5 py-2.5 rounded-2xl border flex flex-col justify-between transition-all duration-300 relative overflow-hidden interactive-card ${
-                isLight 
-                  ? 'bg-gradient-to-br from-white via-indigo-50/40 to-white border-indigo-300/90 hover:border-indigo-500 shadow-[0_4px_20px_rgba(99,102,241,0.12)]' 
-                  : 'bg-gradient-to-br from-zinc-900/90 via-[#0a0c24] to-zinc-950 border-indigo-500/40 hover:border-indigo-400/80 shadow-[0_4px_28px_rgba(0,0,0,0.6)]'
-              }`}>
-                <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-sky-400 via-blue-600 to-indigo-950 opacity-95" />
-                <div className="absolute top-0 left-0 w-36 h-8 bg-gradient-to-r from-blue-500/20 via-sky-400/10 to-transparent blur-md pointer-events-none" />
-
-                <div>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <div className={`w-7 h-7 rounded-xl border flex items-center justify-center shrink-0 transition-all ${
-                      isLight 
-                        ? 'bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50/50 border-blue-200 text-blue-700 shadow-[0_2px_8px_rgba(37,99,235,0.08)]' 
-                        : 'bg-gradient-to-br from-blue-500/20 via-indigo-500/10 to-transparent border-blue-400/35 text-blue-300 shadow-[0_2px_12px_rgba(59,130,246,0.18)]'
-                    }`}>
-                      <Sparkles className="w-3.5 h-3.5 drop-shadow-xs" />
-                    </div>
-                    <div className="relative flex-1 py-1.5 px-3 rounded-xl overflow-hidden bg-gradient-to-r from-sky-400 via-blue-700 to-[#020617] border border-blue-400/40 shadow-[0_4px_16px_rgba(10,25,47,0.3),inset_0_1px_1px_rgba(255,255,255,0.22)] text-white min-w-0">
-                      <div className="absolute inset-0 bg-gradient-to-b from-white/15 via-transparent to-black/20 pointer-events-none" />
-                      <div className="absolute -top-3 -left-3 w-16 h-12 bg-sky-400/25 rounded-full blur-md pointer-events-none" />
-                      <strong className="relative z-10 text-[12px] sm:text-[12.5px] font-bold tracking-tight text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] flex items-center gap-1.5">
-                        <span className="text-sky-300 font-mono font-bold text-[11.5px] opacity-95">3.</span>
-                        <span className="leading-snug">Low-Latency Inference Efficiency</span>
-                      </strong>
-                    </div>
-                  </div>
-                  <p className={`text-[10.5px] sm:text-[11px] leading-relaxed ${isLight ? 'text-zinc-700' : 'text-zinc-300'}`}>
-                    Large models are unusable without predictable sub-15ms p99 serving latency. Continuous batching, paged KV-cache attention, and speculative drafting unlock enterprise real-time execution.
-                  </p>
-                </div>
-
-                <div className={`flex items-center justify-between text-[10px] font-mono mt-2 pt-2 border-t ${
-                  isLight ? 'text-zinc-600 border-indigo-100' : 'text-zinc-400 border-white/10'
-                }`}>
-                  <span className="opacity-80">Enforcement:</span>
-                  <span className={`px-2 py-0.5 rounded-md font-semibold ${
-                    isLight ? 'bg-indigo-50 text-indigo-800 border border-indigo-200' : 'bg-indigo-950/70 text-indigo-200 border border-indigo-800/60'
-                  }`}>
-                    vLLM + TensorRT-LLM PagedAttn
-                  </span>
-                </div>
-              </div>
-
-              {/* Axiom 4: Autonomous Multi-Agent Tool Trust */}
-              <div className={`px-3.5 py-2.5 rounded-2xl border flex flex-col justify-between transition-all duration-300 relative overflow-hidden interactive-card ${
-                isLight 
-                  ? 'bg-gradient-to-br from-white via-indigo-50/40 to-white border-indigo-300/90 hover:border-indigo-500 shadow-[0_4px_20px_rgba(99,102,241,0.12)]' 
-                  : 'bg-gradient-to-br from-zinc-900/90 via-[#0a0c24] to-zinc-950 border-indigo-500/40 hover:border-indigo-400/80 shadow-[0_4px_28px_rgba(0,0,0,0.6)]'
-              }`}>
-                <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-sky-400 via-blue-600 to-indigo-950 opacity-95" />
-                <div className="absolute top-0 left-0 w-36 h-8 bg-gradient-to-r from-blue-500/20 via-sky-400/10 to-transparent blur-md pointer-events-none" />
-
-                <div>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <div className={`w-7 h-7 rounded-xl border flex items-center justify-center shrink-0 transition-all ${
-                      isLight 
-                        ? 'bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50/50 border-blue-200 text-blue-700 shadow-[0_2px_8px_rgba(37,99,235,0.08)]' 
-                        : 'bg-gradient-to-br from-blue-500/20 via-indigo-500/10 to-transparent border-blue-400/35 text-blue-300 shadow-[0_2px_12px_rgba(59,130,246,0.18)]'
-                    }`}>
-                      <Network className="w-3.5 h-3.5 drop-shadow-xs" />
-                    </div>
-                    <div className="relative flex-1 py-1.5 px-3 rounded-xl overflow-hidden bg-gradient-to-r from-sky-400 via-blue-700 to-[#020617] border border-blue-400/40 shadow-[0_4px_16px_rgba(10,25,47,0.3),inset_0_1px_1px_rgba(255,255,255,0.22)] text-white min-w-0">
-                      <div className="absolute inset-0 bg-gradient-to-b from-white/15 via-transparent to-black/20 pointer-events-none" />
-                      <div className="absolute -top-3 -left-3 w-16 h-12 bg-sky-400/25 rounded-full blur-md pointer-events-none" />
-                      <strong className="relative z-10 text-[12px] sm:text-[12.5px] font-bold tracking-tight text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] flex items-center gap-1.5">
-                        <span className="text-sky-300 font-mono font-bold text-[11.5px] opacity-95">4.</span>
-                        <span className="leading-snug">Autonomous Multi-Agent Tool Trust</span>
-                      </strong>
-                    </div>
-                  </div>
-                  <p className={`text-[10.5px] sm:text-[11px] leading-relaxed ${isLight ? 'text-zinc-700' : 'text-zinc-300'}`}>
-                    Autonomous agentic swarms must execute within deterministic boundary contracts. Every external tool invocation, database mutation, and API call requires explicit validation and schema gating.
-                  </p>
-                </div>
-
-                <div className={`flex items-center justify-between text-[10px] font-mono mt-2 pt-2 border-t ${
-                  isLight ? 'text-zinc-600 border-indigo-100' : 'text-zinc-400 border-white/10'
-                }`}>
-                  <span className="opacity-80">Enforcement:</span>
-                  <span className={`px-2 py-0.5 rounded-md font-semibold ${
-                    isLight ? 'bg-indigo-50 text-indigo-800 border border-indigo-200' : 'bg-indigo-950/70 text-indigo-200 border border-indigo-800/60'
-                  }`}>
-                    LangGraph + Tool Boundary Contracts
-                  </span>
-                </div>
-              </div>
-
-              {/* Axiom 5: Defensive AI Safety & Hallucination Guardrails */}
-              <div className={`px-3.5 py-2.5 rounded-2xl border flex flex-col justify-between transition-all duration-300 relative overflow-hidden interactive-card ${
-                isLight 
-                  ? 'bg-gradient-to-br from-white via-indigo-50/40 to-white border-indigo-300/90 hover:border-indigo-500 shadow-[0_4px_20px_rgba(99,102,241,0.12)]' 
-                  : 'bg-gradient-to-br from-zinc-900/90 via-[#0a0c24] to-zinc-950 border-indigo-500/40 hover:border-indigo-400/80 shadow-[0_4px_28px_rgba(0,0,0,0.6)]'
-              }`}>
-                <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-sky-400 via-blue-600 to-indigo-950 opacity-95" />
-                <div className="absolute top-0 left-0 w-36 h-8 bg-gradient-to-r from-blue-500/20 via-sky-400/10 to-transparent blur-md pointer-events-none" />
-
-                <div>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <div className={`w-7 h-7 rounded-xl border flex items-center justify-center shrink-0 transition-all ${
-                      isLight 
-                        ? 'bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50/50 border-blue-200 text-blue-700 shadow-[0_2px_8px_rgba(37,99,235,0.08)]' 
-                        : 'bg-gradient-to-br from-blue-500/20 via-indigo-500/10 to-transparent border-blue-400/35 text-blue-300 shadow-[0_2px_12px_rgba(59,130,246,0.18)]'
-                    }`}>
-                      <Shield className="w-3.5 h-3.5 drop-shadow-xs" />
-                    </div>
-                    <div className="relative flex-1 py-1.5 px-3 rounded-xl overflow-hidden bg-gradient-to-r from-sky-400 via-blue-700 to-[#020617] border border-blue-400/40 shadow-[0_4px_16px_rgba(10,25,47,0.3),inset_0_1px_1px_rgba(255,255,255,0.22)] text-white min-w-0">
-                      <div className="absolute inset-0 bg-gradient-to-b from-white/15 via-transparent to-black/20 pointer-events-none" />
-                      <div className="absolute -top-3 -left-3 w-16 h-12 bg-sky-400/25 rounded-full blur-md pointer-events-none" />
-                      <strong className="relative z-10 text-[12px] sm:text-[12.5px] font-bold tracking-tight text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] flex items-center gap-1.5">
-                        <span className="text-sky-300 font-mono font-bold text-[11.5px] opacity-95">5.</span>
-                        <span className="leading-snug">Deterministic Guardrails & Safety</span>
-                      </strong>
-                    </div>
-                  </div>
-                  <p className={`text-[10.5px] sm:text-[11px] leading-relaxed ${isLight ? 'text-zinc-700' : 'text-zinc-300'}`}>
-                    Generative models are probabilistic by nature. Enterprise safety requires dual-layer deterministic filtering: real-time prompt injection defense and self-reflective verification.
-                  </p>
-                </div>
-
-                <div className={`flex items-center justify-between text-[10px] font-mono mt-2 pt-2 border-t ${
-                  isLight ? 'text-zinc-600 border-indigo-100' : 'text-zinc-400 border-white/10'
-                }`}>
-                  <span className="opacity-80">Enforcement:</span>
-                  <span className={`px-2 py-0.5 rounded-md font-semibold ${
-                    isLight ? 'bg-indigo-50 text-indigo-800 border border-indigo-200' : 'bg-indigo-950/70 text-indigo-200 border border-indigo-800/60'
-                  }`}>
-                    NIST AI RMF + NeMo Guardrails
-                  </span>
-                </div>
-              </div>
-
-              {/* Axiom 6: Real-Time Data Fabric & Continuous Drift Loops */}
-              <div className={`px-3.5 py-2.5 rounded-2xl border flex flex-col justify-between transition-all duration-300 relative overflow-hidden interactive-card ${
-                isLight 
-                  ? 'bg-gradient-to-br from-white via-indigo-50/40 to-white border-indigo-300/90 hover:border-indigo-500 shadow-[0_4px_20px_rgba(99,102,241,0.12)]' 
-                  : 'bg-gradient-to-br from-zinc-900/90 via-[#0a0c24] to-zinc-950 border-indigo-500/40 hover:border-indigo-400/80 shadow-[0_4px_28px_rgba(0,0,0,0.6)]'
-              }`}>
-                <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-sky-400 via-blue-600 to-indigo-950 opacity-95" />
-                <div className="absolute top-0 left-0 w-36 h-8 bg-gradient-to-r from-blue-500/20 via-sky-400/10 to-transparent blur-md pointer-events-none" />
-
-                <div>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <div className={`w-7 h-7 rounded-xl border flex items-center justify-center shrink-0 transition-all ${
-                      isLight 
-                        ? 'bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50/50 border-blue-200 text-blue-700 shadow-[0_2px_8px_rgba(37,99,235,0.08)]' 
-                        : 'bg-gradient-to-br from-blue-500/20 via-indigo-500/10 to-transparent border-blue-400/35 text-blue-300 shadow-[0_2px_12px_rgba(59,130,246,0.18)]'
-                    }`}>
-                      <Database className="w-3.5 h-3.5 drop-shadow-xs" />
-                    </div>
-                    <div className="relative flex-1 py-1.5 px-3 rounded-xl overflow-hidden bg-gradient-to-r from-sky-400 via-blue-700 to-[#020617] border border-blue-400/40 shadow-[0_4px_16px_rgba(10,25,47,0.3),inset_0_1px_1px_rgba(255,255,255,0.22)] text-white min-w-0">
-                      <div className="absolute inset-0 bg-gradient-to-b from-white/15 via-transparent to-black/20 pointer-events-none" />
-                      <div className="absolute -top-3 -left-3 w-16 h-12 bg-sky-400/25 rounded-full blur-md pointer-events-none" />
-                      <strong className="relative z-10 text-[12px] sm:text-[12.5px] font-bold tracking-tight text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] flex items-center gap-1.5">
-                        <span className="text-sky-300 font-mono font-bold text-[11.5px] opacity-95">6.</span>
-                        <span className="leading-snug">Continuous Drift & Feedback Loops</span>
-                      </strong>
-                    </div>
-                  </div>
-                  <p className={`text-[10.5px] sm:text-[11px] leading-relaxed ${isLight ? 'text-zinc-700' : 'text-zinc-300'}`}>
-                    Models in static isolation decay under real-world distribution shift. Production intelligence requires automated embedding drift telemetry, online feature registries, and continuous canary validation.
-                  </p>
-                </div>
-
-                <div className={`flex items-center justify-between text-[10px] font-mono mt-2 pt-2 border-t ${
-                  isLight ? 'text-zinc-600 border-indigo-100' : 'text-zinc-400 border-white/10'
-                }`}>
-                  <span className="opacity-80">Enforcement:</span>
-                  <span className={`px-2 py-0.5 rounded-md font-semibold ${
-                    isLight ? 'bg-indigo-50 text-indigo-800 border border-indigo-200' : 'bg-indigo-950/70 text-indigo-200 border border-indigo-800/60'
-                  }`}>
-                    Feature Stores + Embedding Drift
-                  </span>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         )}

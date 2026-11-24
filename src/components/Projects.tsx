@@ -18,14 +18,15 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EXECUTIVE_CASE_STUDIES } from '../data/caseStudiesData';
+import { CYBERSECURITY_CASE_STUDIES } from '../data/cybersecurityData';
+import { SectionBackgroundAura } from './SectionBackgroundAura';
+import { useAuth } from '../context/AuthContext';
 import { ExecutiveCaseStudy } from '../types';
 import { CaseStudyModal } from './CaseStudyModal';
 import { CaseStudySlider } from './CaseStudySlider';
 import { useHoverScroll } from '../lib/utils';
 import { trackAssetInteraction } from '../lib/analytics';
-import { useAuth } from '../context/AuthContext';
 import { StarsCounter } from './StarsCounter';
-import { SectionBackgroundAura } from './SectionBackgroundAura';
 
 interface ProjectsProps {
   theme?: string;
@@ -55,7 +56,8 @@ export const Projects: React.FC<ProjectsProps> = ({ theme = 'apple-dark' }) => {
     isSectionLocked, 
     toggleSectionLock, 
     toggleItemLock,
-    setGateModalOpen
+    setGateModalOpen,
+    portfolioMode
   } = useAuth();
 
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -66,9 +68,11 @@ export const Projects: React.FC<ProjectsProps> = ({ theme = 'apple-dark' }) => {
 
   const isSectionGated = isSectionLocked('case-studies');
 
+  const caseStudies = portfolioMode === 'cybersecurity' ? CYBERSECURITY_CASE_STUDIES : EXECUTIVE_CASE_STUDIES;
+
   // Filter case studies by category and search query
   const filteredCaseStudies = useMemo(() => {
-    return EXECUTIVE_CASE_STUDIES.filter((cs) => {
+    return caseStudies.filter((cs) => {
       const matchesCategory = selectedCategory === 'all' || cs.category === selectedCategory;
       if (!matchesCategory) return false;
       
@@ -213,7 +217,7 @@ export const Projects: React.FC<ProjectsProps> = ({ theme = 'apple-dark' }) => {
                 ? 'text-zinc-900 drop-shadow-[0_2px_16px_rgba(59,130,246,0.18)]' 
                 : 'text-white drop-shadow-[0_0_28px_rgba(96,165,250,0.40)]'
             }`}>
-              Strategic Case Studies & Defense Programs
+              {portfolioMode === 'cybersecurity' ? 'Strategic Cybersecurity & Defense Case Studies' : 'Strategic AI, Machine Learning & Systems Case Studies'}
             </h2>
             
             {/* Clearance Pill */}

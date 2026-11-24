@@ -1,9 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { Briefcase, Calendar, MapPin, ChevronRight, CheckCircle2, Award, ChevronDown, ChevronUp, Layers, Building2 } from 'lucide-react';
 import { CAREER_MILESTONES } from '../data/portfolioData';
+import { CYBERSECURITY_CAREER_MILESTONES } from '../data/cybersecurityData';
 import { useHoverScroll } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { SectionBackgroundAura } from './SectionBackgroundAura';
+import { useAuth } from '../context/AuthContext';
 
 interface CareerJourneyProps {
   theme?: string;
@@ -11,6 +13,7 @@ interface CareerJourneyProps {
 
 export const CareerJourney: React.FC<CareerJourneyProps> = ({ theme = 'apple-dark' }) => {
   const isLight = theme === 'apple-light';
+  const { portfolioMode } = useAuth();
   const [selectedFilter, setSelectedFilter] = useState<string>('All');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const listContainerRef = useRef<HTMLDivElement>(null);
@@ -108,7 +111,8 @@ export const CareerJourney: React.FC<CareerJourneyProps> = ({ theme = 'apple-dar
     ...careerGroups.flatMap(g => g.roles)
   ];
 
-  const filteredMilestones = CAREER_MILESTONES;
+  const milestones = portfolioMode === 'cybersecurity' ? CYBERSECURITY_CAREER_MILESTONES : CAREER_MILESTONES;
+  const filteredMilestones = milestones;
 
   const handleFilterChange = (filterVal: string) => {
     setSelectedFilter(filterVal);

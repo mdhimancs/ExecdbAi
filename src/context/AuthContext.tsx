@@ -229,6 +229,11 @@ interface AuthContextType {
   activeVaultPin: string;
   updateVaultPin: (newPin: string) => Promise<void>;
   openVaultGate: (roadmap: any, onGrant?: () => void) => void;
+
+  // Website Portal Mode (Cybersecurity vs execdbAI)
+  portfolioMode: 'cybersecurity' | 'execdbai';
+  setPortfolioMode: (mode: 'cybersecurity' | 'execdbai') => void;
+  togglePortfolioMode: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -286,6 +291,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [vaultModalOpen, setVaultModalOpen] = useState(false);
   const [targetRoadmap, setTargetRoadmap] = useState<any | null>(null);
   const [activeVaultPin, setActiveVaultPin] = useState<string>('739104'); // 6-digit Search Partner PIN
+
+  // Website Portal Mode (Cybersecurity vs execdbAI) - restored to 'cybersecurity'
+  const [portfolioMode, setPortfolioModeState] = useState<'cybersecurity' | 'execdbai'>(() => {
+    try {
+      const stored = localStorage.getItem('execdb_portfolio_mode');
+      if (stored === 'cybersecurity') return 'cybersecurity';
+      if (stored === 'execdbai') {
+        // If explicitly stored as execdbai previously, check if reset is requested
+        return 'cybersecurity';
+      }
+      localStorage.setItem('execdb_portfolio_mode', 'cybersecurity');
+      return 'cybersecurity';
+    } catch {
+      return 'cybersecurity';
+    }
+  });
+
+  const setPortfolioMode = useCallback((mode: 'cybersecurity' | 'execdbai') => {
+    setPortfolioModeState(mode);
+    try {
+      localStorage.setItem('execdb_portfolio_mode', mode);
+    } catch {}
+    window.location.reload();
+  }, []);
+
+  const togglePortfolioMode = useCallback(() => {
+    const nextMode = portfolioMode === 'cybersecurity' ? 'execdbai' : 'cybersecurity';
+    setPortfolioMode(nextMode);
+  }, [portfolioMode, setPortfolioMode]);
 
   // Granular locks state: by default, archives and publications are locked; case studies can also be locked individually or entirely
   const [lockedSections, setLockedSections] = useState<string[]>(['archives', 'publications']);
@@ -1323,7 +1357,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       unlockVaultWithPin,
       activeVaultPin,
       updateVaultPin,
-      openVaultGate
+      openVaultGate,
+
+      // Website Portal Mode
+      portfolioMode,
+      setPortfolioMode,
+      togglePortfolioMode
     }}>
       {children}
     </AuthContext.Provider>

@@ -36,12 +36,13 @@ export const LOCKABLE_SECTIONS: LockableSection[] = [
     id: 'archives',
     name: 'Archives & Patents',
     description: 'Executive blueprints, aspirational roadmaps, strategic playbooks, and patent catalog',
-    count: 4 + 6 + 5 + ARCHIVE_ITEMS.length
+    count: 6 + 6 + 5 + ARCHIVE_ITEMS.length
   }
 ];
 
 // Additional archive items defined directly in Archive.tsx
 const ARCHIVE_BLUEPRINTS = [
+  { id: 'bp-datacenter-biometric-k8s', title: 'Planetary Sovereign Data Center & 13-Nodal Biometric Blueprint (300 Crore Scale)', category: 'Data Center Architecture' },
   { id: 'bp-ztmm', title: 'Enterprise Zero Trust Maturity & Implementation Matrix', category: 'Executive Blueprint' },
   { id: 'bp-rag-guardrails', title: 'GenAI Enterprise RAG Security & Data Leakage Guardrail Topology', category: 'Executive Blueprint' },
   { id: 'bp-sec-8k', title: 'SEC Item 1.05 & 8-K Material Incident Command Blueprint', category: 'Executive Blueprint' },

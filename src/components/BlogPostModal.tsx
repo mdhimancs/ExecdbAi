@@ -1,24 +1,29 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Calendar, Clock, Eye, Heart, Share2, Terminal, Check, Printer, Lock, KeyRound, ShieldCheck, CheckCircle2, Info, Sparkles, BookOpen, Layers, Cpu, ArrowRight, Award, GraduationCap, Star } from 'lucide-react';
+import { X, Calendar, Clock, Eye, Heart, Share2, Terminal, Check, Lock, KeyRound, ShieldCheck, CheckCircle2, Info, Sparkles, BookOpen, Layers, Cpu, ArrowRight, Award, GraduationCap, Star, Maximize2, ZoomIn, ZoomOut } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { BlogPost } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { incrementStars } from '../lib/stars';
 import { SeniorResearcherReviewView } from './SeniorResearcherReviewView';
+import { WhiteboardSessionView } from './WhiteboardSessionView';
 import { getExpertReviewForPost } from '../data/expertReviews';
+import { HldDiagramCard } from './HldDiagramCard';
 
 interface BlogPostModalProps {
   post: BlogPost | null;
-  initialTab?: 'manuscript' | 'review';
+  initialTab?: 'manuscript' | 'review' | 'whiteboard';
   onClose: () => void;
 }
 
 export const BlogPostModal: React.FC<BlogPostModalProps> = ({ post, initialTab = 'manuscript', onClose }) => {
-  const [activeTab, setActiveTab] = useState<'manuscript' | 'review'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'manuscript' | 'review' | 'whiteboard'>(initialTab);
   const [likes, setLikes] = useState(post ? post.likes : 0);
   const [hasLiked, setHasLiked] = useState(false);
   const [copied, setCopied] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [lightboxCode, setLightboxCode] = useState<string | null>(null);
+  const [lightboxImage, setLightboxImage] = useState<{ src: string; alt?: string } | null>(null);
+  const [zoomLevel, setZoomLevel] = useState<number>(1);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const { canAccessItem, setGateModalOpen, setTargetResource, user, isAuthorized, isAdmin } = useAuth();
@@ -71,9 +76,6 @@ export const BlogPostModal: React.FC<BlogPostModalProps> = ({ post, initialTab =
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
 
   const progressPercent = Math.round(scrollProgress);
 
@@ -112,13 +114,6 @@ export const BlogPostModal: React.FC<BlogPostModalProps> = ({ post, initialTab =
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={handlePrint}
-              className="p-1.5 sm:p-2 text-zinc-600 hover:text-zinc-900 bg-zinc-100 hover:bg-zinc-200 rounded-full exec-transition"
-              title="Print Whitepaper / Executive Brief"
-            >
-              <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            </button>
-            <button
               onClick={onClose}
               className="p-1.5 sm:p-2 text-zinc-600 hover:text-zinc-900 bg-zinc-100 hover:bg-zinc-200 rounded-full exec-transition"
             >
@@ -127,13 +122,13 @@ export const BlogPostModal: React.FC<BlogPostModalProps> = ({ post, initialTab =
           </div>
         </div>
 
-        {/* Navigation Tabs: Whitepaper Manuscript vs Senior Researcher Peer Review */}
-        <div className="flex items-center justify-between px-5 sm:px-6 py-2.5 border-b border-zinc-200 bg-slate-50/80 backdrop-blur-xs shrink-0">
+        {/* Navigation Tabs: Whitepaper Manuscript vs Whiteboard Session vs Senior Researcher Peer Review */}
+        <div className="flex items-center justify-between px-5 sm:px-6 py-2.5 border-b border-zinc-200 bg-slate-50/80 backdrop-blur-xs shrink-0 overflow-x-auto scrollbar-none">
           <div className="flex items-center space-x-2">
             <button
               type="button"
               onClick={() => setActiveTab('manuscript')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === 'manuscript'
                   ? 'bg-blue-600 text-white shadow-xs'
                   : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-100'
@@ -144,8 +139,25 @@ export const BlogPostModal: React.FC<BlogPostModalProps> = ({ post, initialTab =
             </button>
             <button
               type="button"
+              onClick={() => setActiveTab('whiteboard')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'whiteboard'
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-50'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Whiteboard Session</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+                activeTab === 'whiteboard' ? 'bg-emerald-800 text-emerald-200' : 'bg-emerald-100 text-emerald-800'
+              }`}>
+                ARB Canvas
+              </span>
+            </button>
+            <button
+              type="button"
               onClick={() => setActiveTab('review')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === 'review'
                   ? 'bg-indigo-700 text-white shadow-xs'
                   : 'bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50'
@@ -160,11 +172,16 @@ export const BlogPostModal: React.FC<BlogPostModalProps> = ({ post, initialTab =
               </span>
             </button>
           </div>
-          <div className="hidden sm:flex items-center text-[11px] font-mono text-zinc-500">
+          <div className="hidden sm:flex items-center text-[11px] font-mono text-zinc-500 whitespace-nowrap ml-2">
             {activeTab === 'review' ? (
               <span className="text-emerald-700 font-semibold flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                 Double-Blind Peer Review Audit
+              </span>
+            ) : activeTab === 'whiteboard' ? (
+              <span className="text-emerald-700 font-semibold flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                Live Architecture Board Canvas
               </span>
             ) : (
               <span className="text-zinc-500">
@@ -185,8 +202,41 @@ export const BlogPostModal: React.FC<BlogPostModalProps> = ({ post, initialTab =
               post={post}
               onSwitchToManuscript={() => setActiveTab('manuscript')}
             />
+          ) : activeTab === 'whiteboard' ? (
+            <WhiteboardSessionView
+              post={post}
+              onSwitchToManuscript={() => setActiveTab('manuscript')}
+            />
           ) : (
             <>
+              {/* Optional Quick Link to Whiteboard Canvas from Manuscript header */}
+              {post.id === 'bp-2026-datacenter-biometric-k8s-mesh' && (
+                <div 
+                  onClick={() => setActiveTab('whiteboard')}
+                  className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 border border-emerald-300 text-emerald-950 flex items-center justify-between cursor-pointer hover:shadow-md transition-all group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                      <Layers className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
+                        <span>Interactive Architecture Whiteboard Session Available</span>
+                        <span className="px-1.5 py-0.2 rounded-full bg-emerald-200/80 text-emerald-900 text-[10px] font-mono font-bold">
+                          Live ARB Canvas
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-emerald-700 leading-snug">
+                        Explore the interactive whiteboard canvas with 5-region geo-fabric, step-by-step latency trace, and live sequence walkthrough.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs font-semibold text-emerald-700 group-hover:text-emerald-900 group-hover:translate-x-1 transition-all shrink-0">
+                    <span>Open Whiteboard</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+              )}
               <div className="space-y-4">
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-zinc-900 tracking-tight leading-tight [text-wrap:balance]">
                   {post.title}
@@ -318,16 +368,31 @@ export const BlogPostModal: React.FC<BlogPostModalProps> = ({ post, initialTab =
                     const isMcpArticle = post.id === 'bp-2026-mcp-rbac-pbac-ai-governance';
                     const isNhiArticle = post.id === 'bp-2026-non-human-identities-cicd';
                     return (
-                      <span className="block my-4 space-y-3">
-                        <span className="block relative overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-900 shadow-sm max-w-xl mx-auto">
+                      <span className="block my-6 space-y-3">
+                        <span className="block relative overflow-hidden rounded-2xl border border-zinc-300 bg-slate-950 shadow-lg group">
+                          <span className="flex items-center justify-between px-4 py-2.5 bg-slate-900 border-b border-slate-800 text-xs font-mono text-emerald-400 font-semibold">
+                            <span className="flex items-center gap-1.5">
+                              <Cpu className="w-3.5 h-3.5 text-emerald-400" />
+                              <span>SYSTEM ARCHITECTURE DIAGRAM</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setLightboxImage({ src: props.src || '', alt: props.alt })}
+                              className="text-[11px] font-sans font-semibold text-slate-300 hover:text-white flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded-md transition-colors cursor-pointer"
+                            >
+                              <Maximize2 className="w-3.5 h-3.5 text-emerald-400" />
+                              <span>Expand Lightbox</span>
+                            </button>
+                          </span>
                           <img
                             {...props}
                             referrerPolicy="no-referrer"
-                            className="w-full h-24 sm:h-32 object-cover opacity-90"
+                            className="w-full max-h-[520px] object-contain p-3 sm:p-5 cursor-pointer hover:opacity-95 transition-opacity"
                             loading="lazy"
+                            onClick={() => setLightboxImage({ src: props.src || '', alt: props.alt })}
                           />
                           {props.alt && (
-                            <span className="block px-3 py-1.5 bg-zinc-900/90 text-[11px] font-mono text-zinc-300 border-t border-zinc-800 text-center">
+                            <span className="block px-4 py-2 bg-slate-900/95 text-xs font-mono text-slate-300 border-t border-slate-800 text-center font-medium">
                               {props.alt}
                             </span>
                           )}
@@ -434,7 +499,40 @@ export const BlogPostModal: React.FC<BlogPostModalProps> = ({ post, initialTab =
                     );
                   },
                   code({ node, inline, className, children, ...props }: any) {
+                    const codeStr = String(children).replace(/\n$/, '');
                     const match = /language-(\w+)/.exec(className || '');
+                    const lang = match ? match[1].toLowerCase() : '';
+
+                    const isHldDiagram = !inline && (
+                      lang === 'hld' ||
+                      lang === 'diagram' ||
+                      lang === 'ascii' ||
+                      lang === 'architecture' ||
+                      codeStr.includes('+---') ||
+                      codeStr.includes('+===') ||
+                      codeStr.includes('SYSTEM ARCHITECTURE') ||
+                      codeStr.includes('CONTINENTAL MULTI-REGION') ||
+                      codeStr.includes('ZONE 0:') ||
+                      codeStr.includes('ZONE 1:') ||
+                      codeStr.includes('ZONE 2:') ||
+                      codeStr.includes('WHITEBOARD SESSION') ||
+                      codeStr.includes('RISK (Annualized') ||
+                      codeStr.includes('CATEGORY 1:') ||
+                      codeStr.includes('LAYER 1:')
+                    );
+
+                    if (isHldDiagram) {
+                      return (
+                        <HldDiagramCard
+                          code={codeStr}
+                          language={lang || 'hld'}
+                          title={post?.title ? `${post.title.split(':')[0]} Architecture` : undefined}
+                          onOpenWhiteboard={() => setActiveTab('whiteboard')}
+                          onOpenLightbox={(c) => setLightboxCode(c)}
+                        />
+                      );
+                    }
+
                     return !inline ? (
                       <div className="my-5 rounded-2xl overflow-hidden border border-zinc-200 bg-zinc-50 text-zinc-800 shadow-sm max-w-2xl mx-auto">
                         <div className="flex items-center justify-between px-4.5 py-2.5 bg-zinc-100 border-b border-zinc-200 text-xs text-zinc-700 font-mono">
@@ -527,6 +625,67 @@ export const BlogPostModal: React.FC<BlogPostModalProps> = ({ post, initialTab =
           )}
         </div>
       </div>
+
+      {/* Fullscreen Lightbox Modal Overlay for Image Diagrams & Code Blueprints */}
+      {(lightboxImage || lightboxCode) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/90 backdrop-blur-2xl animate-in fade-in duration-200">
+          <div className="relative w-full max-w-5xl bg-slate-950 border border-emerald-500/30 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+            {/* Lightbox Header Bar */}
+            <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 border-b border-slate-800 bg-slate-900/95 text-slate-100 shrink-0">
+              <div className="flex items-center space-x-2 font-mono text-xs text-emerald-400 font-bold truncate">
+                <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span className="truncate">{lightboxImage ? (lightboxImage.alt || 'High-Definition Architecture Diagram') : 'High-Level Architecture Blueprint'}</span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {lightboxImage && (
+                  <div className="flex items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700">
+                    <button
+                      type="button"
+                      onClick={() => setZoomLevel(Math.max(0.75, zoomLevel - 0.25))}
+                      className="p-1 text-slate-300 hover:text-white cursor-pointer"
+                      title="Zoom Out"
+                    >
+                      <ZoomOut className="w-4 h-4" />
+                    </button>
+                    <span className="px-2 font-mono text-xs text-slate-300">{Math.round(zoomLevel * 100)}%</span>
+                    <button
+                      type="button"
+                      onClick={() => setZoomLevel(Math.min(2.5, zoomLevel + 0.25))}
+                      className="p-1 text-slate-300 hover:text-white cursor-pointer"
+                      title="Zoom In"
+                    >
+                      <ZoomIn className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => { setLightboxImage(null); setLightboxCode(null); setZoomLevel(1); }}
+                  className="p-1.5 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-full transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Lightbox Content Body */}
+            <div className="p-4 sm:p-6 overflow-auto flex-1 flex items-center justify-center bg-[#050811]">
+              {lightboxImage ? (
+                <img
+                  src={lightboxImage.src}
+                  alt={lightboxImage.alt || 'Architecture Diagram'}
+                  className="max-w-full max-h-[75vh] object-contain transition-transform duration-200 shadow-2xl rounded-xl"
+                  style={{ transform: `scale(${zoomLevel})` }}
+                />
+              ) : lightboxCode ? (
+                <div className="w-full h-full max-h-[75vh] overflow-auto p-6 rounded-2xl bg-[#03060d] border border-emerald-500/30 text-emerald-300 font-mono text-xs sm:text-sm leading-relaxed shadow-inner select-text">
+                  <pre className="whitespace-pre font-mono">{lightboxCode}</pre>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

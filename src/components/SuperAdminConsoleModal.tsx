@@ -22,6 +22,7 @@ import {
   FileText,
   Video,
   Layers,
+  Brain,
   ChevronDown,
   ChevronUp,
   ExternalLink,
@@ -301,7 +302,7 @@ export const SuperAdminConsoleModal: React.FC<SuperAdminConsoleModalProps> = ({
   theme = 'apple-light'
 }) => {
   const isLight = theme === 'apple-light';
-  const { user, isAdmin, clientIp, signInWithGoogle, signInWithPasscode, signOut } = useAuth();
+  const { user, isAdmin, clientIp, signInWithGoogle, signInWithPasscode, signOut, portfolioMode, setPortfolioMode } = useAuth();
   
   const [activeTab, setActiveTab] = useState<'visitors' | 'analytics' | 'heatmap' | 'sessions' | 'audit' | 'security'>('visitors');
   const [searchTerm, setSearchTerm] = useState('');
@@ -951,6 +952,56 @@ export const SuperAdminConsoleModal: React.FC<SuperAdminConsoleModalProps> = ({
             >
               <X className="w-4 h-4" />
             </button>
+          </div>
+        </div>
+
+        {/* Executive Website & Platform Control Bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between px-5 py-2.5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white border-b border-indigo-500/30 shrink-0 gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-lg bg-indigo-500/20 text-cyan-300 border border-indigo-400/30 shrink-0">
+              <Layers className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold uppercase tracking-wider text-cyan-300">Active Website Platform:</span>
+                <span className="text-xs font-black px-2.5 py-0.5 rounded-md bg-cyan-500/20 text-cyan-200 border border-cyan-400/40">
+                  {portfolioMode === 'cybersecurity' ? 'Enterprise Cybersecurity & IAM Portfolio' : 'execdbAI • AI, ML & Data Science Platform'}
+                </span>
+              </div>
+              <p className="text-[10px] text-zinc-400">Controls which website dataset, branding, blueprints, and executive case studies are live across the entire application.</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[10px] uppercase font-mono font-bold text-zinc-400 mr-1 hidden md:inline">Switch Active Website:</span>
+            <div className="flex items-center gap-1.5 p-1 bg-black/60 rounded-xl border border-white/15 shadow-inner">
+              <button
+                type="button"
+                onClick={() => setPortfolioMode('cybersecurity')}
+                className={`flex items-center gap-1.5 px-3.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  portfolioMode === 'cybersecurity'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/40 border border-blue-400/50'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/10'
+                }`}
+                title="Activate Cybersecurity & IAM Executive Portfolio"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-cyan-300" />
+                <span>Cybersecurity</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPortfolioMode('execdbai')}
+                className={`flex items-center gap-1.5 px-3.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  portfolioMode === 'execdbai'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/40 border border-blue-400/50'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/10'
+                }`}
+                title="Activate execdbAI • AI, ML & Data Science Platform"
+              >
+                <Brain className="w-3.5 h-3.5 text-cyan-300" />
+                <span>execdbAI</span>
+              </button>
+            </div>
           </div>
         </div>
 

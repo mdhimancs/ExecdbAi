@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { ShieldCheck, CheckCircle2, ChevronRight, Sparkles, Github, Linkedin, Mail, Shield, Award, Cpu, BarChart3 } from 'lucide-react';
 import { PERSONAL_INFO } from '../data/portfolioData';
+import { CYBERSECURITY_PERSONAL_INFO } from '../data/cybersecurityData';
 import { SectionBackgroundAura } from './SectionBackgroundAura';
+import { useAuth } from '../context/AuthContext';
 
 interface HeroProps {
   onOpenContact: () => void;
@@ -90,11 +92,85 @@ const HIGHLIGHT_PRESETS: HighlightPreset[] = [
   }
 ];
 
+const CYBERSECURITY_HIGHLIGHT_PRESETS: HighlightPreset[] = [
+  {
+    id: 'executive',
+    label: 'Enterprise IAM & Zero Trust',
+    icon: <Award className="w-3 h-3" />,
+    stats: [
+      { value: "21+ Yrs", label: "Defense Leadership", sublabel: "CISO & Security Track" },
+      { value: "5M+", label: "Protected Identities", sublabel: "Workforce & Cloud Service Accounts" },
+      { value: "0 Findings", label: "SOX 404 & GRC Audits", sublabel: "3+ Consecutive Clean Years" },
+      { value: "-98.4%", label: "Standing Privileges", sublabel: "Ephemeral JIT Access" },
+      { value: "Fortune 100", label: "Global Enterprise Scale", sublabel: "Financial & Tech Tier-1" }
+    ],
+    footprints: [
+      "Zero Trust Architecture (NIST 800-207) & Identity Mesh",
+      "Privileged Access Modernization (CyberArk) & Session Isolation",
+      "Identity Governance & Automated Lifecycle (SailPoint IGA)"
+    ]
+  },
+  {
+    id: 'scale',
+    label: 'Posture & Compliance',
+    icon: <BarChart3 className="w-3 h-3" />,
+    stats: [
+      { value: "0 Deficiencies", label: "Supervisory Examination", sublabel: "US Fed & PRA Defense" },
+      { value: "18K+", label: "Vaulted Infrastructure", sublabel: "Linux/Windows Servers & DBs" },
+      { value: "100%", label: "Phishing-Resistant MFA", sublabel: "FIDO2 & Hardware Tokens" },
+      { value: "Tier-0", label: "Directory Hardening", sublabel: "Entra ID & Active Directory" },
+      { value: "ISO 27001", label: "Global Certification", sublabel: "SOC 2 Type II Compliance" }
+    ],
+    footprints: [
+      "Supervisory Board Reporting & Quantitative FAIR™ Risk Analysis",
+      "Continuous Compliance Automation & Policy-as-Code CI/CD",
+      "Enterprise PKI, HSM Cryptography & Key Management"
+    ]
+  },
+  {
+    id: 'ai',
+    label: 'AI Security & DSPM',
+    icon: <Cpu className="w-3 h-3" />,
+    stats: [
+      { value: "NIST AI RMF", label: "AI Governance Framework", sublabel: "SR 11-7 Supervisory Rigor" },
+      { value: "OWASP LLM", label: "Top 10 Guardrails", sublabel: "Prompt Injection Defense" },
+      { value: "DSPM", label: "Data Security Posture", sublabel: "PII/MNPI Tokenization" },
+      { value: "Sub-15ms", label: "DLP Inspection Overhead", sublabel: "High-Speed Security Gateway" },
+      { value: "Sovereign AI", label: "Confidential Enclaves", sublabel: "Private Enterprise Models" }
+    ],
+    footprints: [
+      "Generative AI Real-Time Prompt DLP & Tokenization Gateway",
+      "Behavioral Threat Analytics (UEBA) & Anomaly Detection",
+      "Sovereign AI Data Privacy & Regulatory Compliance (GDPR)"
+    ]
+  },
+  {
+    id: 'defense',
+    label: 'Multi-Cloud Defense',
+    icon: <Shield className="w-3 h-3" />,
+    stats: [
+      { value: "Multi-Cloud", label: "CSPM Security Posture", sublabel: "AWS & Azure Enclaves" },
+      { value: "Micro-Seg", label: "Low-Latency Trading", sublabel: "Trading Enclave Isolation" },
+      { value: "SASE", label: "Edge Security Architecture", sublabel: "Zero Trust Network Access" },
+      { value: "Zero Standing", label: "Privilege (ZSP)", sublabel: "Just-In-Time Credentialing" },
+      { value: "sub-90m", label: "Zero-Day Containment", sublabel: "Institutional SOC & Incident Command" }
+    ],
+    footprints: [
+      "Micro-segmentation & Trading Enclave Network Isolation",
+      "Cloud Entitlement Management (CIEM) & Secretless Auth",
+      "Institutional Incident Command & Threat Intelligence (FS-ISAC)"
+    ]
+  }
+];
+
 export const Hero: React.FC<HeroProps> = ({ onOpenContact, onExploreBlog, theme = 'apple-light' }) => {
   const isLight = theme === 'apple-light';
+  const { portfolioMode } = useAuth();
+  const info = portfolioMode === 'cybersecurity' ? CYBERSECURITY_PERSONAL_INFO : PERSONAL_INFO;
+  const presets = portfolioMode === 'cybersecurity' ? CYBERSECURITY_HIGHLIGHT_PRESETS : HIGHLIGHT_PRESETS;
   const [activeHighlightId, setActiveHighlightId] = useState<HighlightCategory>('executive');
 
-  const currentPreset = HIGHLIGHT_PRESETS.find(p => p.id === activeHighlightId) || HIGHLIGHT_PRESETS[0];
+  const currentPreset = presets.find(p => p.id === activeHighlightId) || presets[0];
 
   return (
     <section 
@@ -152,14 +228,23 @@ export const Hero: React.FC<HeroProps> = ({ onOpenContact, onExploreBlog, theme 
                 : 'text-white drop-shadow-[0_0_28px_rgba(96,165,250,0.40)]'
             }`}
           >
-            <span className="block"><span className={`text-transparent bg-clip-text ${isLight ? 'bg-gradient-to-r from-blue-700 via-cyan-700 to-indigo-800' : 'bg-gradient-to-r from-cyan-300 via-blue-200 to-indigo-300'}`}>Enterprise Artificial Intelligence</span>, <span className={`text-transparent bg-clip-text font-extrabold ${isLight ? 'bg-gradient-to-r from-blue-700 via-indigo-600 to-zinc-950 drop-shadow-[0_1px_2px_rgba(59,130,246,0.3)]' : 'bg-gradient-to-r from-sky-300 via-blue-200 to-white drop-shadow-[0_0_20px_rgba(56,189,248,0.5)]'}`}>Machine Learning Systems</span></span>
-            <span className="block mt-[2.8px] sm:mt-[4px]">& Scalable Data Science.</span>
+            {portfolioMode === 'cybersecurity' ? (
+              <>
+                <span className="block"><span className={`text-transparent bg-clip-text ${isLight ? 'bg-gradient-to-r from-blue-700 via-cyan-700 to-indigo-800' : 'bg-gradient-to-r from-cyan-300 via-blue-200 to-indigo-300'}`}>Enterprise Cybersecurity</span>, <span className={`text-transparent bg-clip-text font-extrabold ${isLight ? 'bg-gradient-to-r from-blue-700 via-indigo-600 to-zinc-950 drop-shadow-[0_1px_2px_rgba(59,130,246,0.3)]' : 'bg-gradient-to-r from-sky-300 via-blue-200 to-white drop-shadow-[0_0_20px_rgba(56,189,248,0.5)]'}`}>Zero Trust IAM</span></span>
+                <span className="block mt-[2.8px] sm:mt-[4px]">& Digital Risk Governance.</span>
+              </>
+            ) : (
+              <>
+                <span className="block"><span className={`text-transparent bg-clip-text ${isLight ? 'bg-gradient-to-r from-blue-700 via-cyan-700 to-indigo-800' : 'bg-gradient-to-r from-cyan-300 via-blue-200 to-indigo-300'}`}>Enterprise Artificial Intelligence</span>, <span className={`text-transparent bg-clip-text font-extrabold ${isLight ? 'bg-gradient-to-r from-blue-700 via-indigo-600 to-zinc-950 drop-shadow-[0_1px_2px_rgba(59,130,246,0.3)]' : 'bg-gradient-to-r from-sky-300 via-blue-200 to-white drop-shadow-[0_0_20px_rgba(56,189,248,0.5)]'}`}>Machine Learning Systems</span></span>
+                <span className="block mt-[2.8px] sm:mt-[4px]">& Scalable Data Science.</span>
+              </>
+            )}
           </h1>
           <p 
             style={{ paddingBottom: '49px' }}
             className={`w-full max-w-4xl mx-auto text-[11px] font-medium leading-relaxed px-1 sm:px-2 ${isLight ? 'text-zinc-700' : 'text-zinc-400'}`}
           >
-            {PERSONAL_INFO.tagline}
+            {info.tagline}
           </p>
         </div>
 
@@ -204,7 +289,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenContact, onExploreBlog, theme 
 
             {/* Presets Toggle Group */}
             <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-1.5">
-              {HIGHLIGHT_PRESETS.map((preset) => {
+              {presets.map((preset) => {
                 const isSelected = activeHighlightId === preset.id;
                 return (
                   <button
@@ -297,7 +382,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenContact, onExploreBlog, theme 
       <div className={`pt-2 mt-1.5 border-t shrink-0 ${isLight ? 'border-zinc-200 text-zinc-600' : 'border-white/10 text-zinc-400'}`}>
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs py-0.5">
           <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4">
-            <span className={`font-semibold ${isLight ? 'text-zinc-900' : 'text-white'}`}>{PERSONAL_INFO.name}</span>
+            <span className={`font-semibold ${isLight ? 'text-zinc-900' : 'text-white'}`}>{info.name}</span>
             <span className="text-[10px] font-bold opacity-40">Executive Portfolio Vault</span>
             
             {/* Light Grey Separator */}
@@ -306,7 +391,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenContact, onExploreBlog, theme 
             {/* Social & Contact Icons */}
             <div className="flex items-center gap-x-4 sm:gap-x-5 pl-1">
               <a 
-                href={PERSONAL_INFO.github} 
+                href={info.github} 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className={`hover:text-blue-500 transition-colors p-0.5 ${isLight ? 'text-zinc-500 hover:text-zinc-900' : 'text-zinc-400 hover:text-white'}`}
@@ -315,7 +400,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenContact, onExploreBlog, theme 
                 <Github className="w-3.5 h-3.5" />
               </a>
               <a 
-                href={PERSONAL_INFO.linkedin} 
+                href={info.linkedin} 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className={`hover:text-blue-500 transition-colors p-0.5 ${isLight ? 'text-zinc-500 hover:text-zinc-900' : 'text-zinc-400 hover:text-white'}`}

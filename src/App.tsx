@@ -96,15 +96,15 @@ const SnapSection: React.FC<SnapSectionProps> = ({ id, children }) => {
   return (
     <div id={id} className="snap-section w-full">
       <motion.div
-        initial={{ opacity: 0, scale: 0.97, y: 35 }}
+        initial={{ opacity: 0, scale: 0.96, y: 40 }}
         whileInView={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.97, y: -35 }}
+        exit={{ opacity: 0, scale: 0.96, y: -40 }}
         viewport={{ once: false, amount: 0.15 }}
         transition={{ 
-          duration: 0.7, 
+          duration: 1.6, 
           ease: [0.16, 1, 0.3, 1],
-          staggerChildren: 0.1,
-          delayChildren: 0.05
+          staggerChildren: 0.15,
+          delayChildren: 0.08
         }}
         className="w-full h-full"
       >
@@ -163,7 +163,7 @@ export default function App() {
       window.history.pushState(null, '', `#${sectionId}`);
       setTimeout(() => {
         isTransitioningRef.current = false;
-      }, 700);
+      }, 1600);
     }
   }, []);
 
@@ -540,7 +540,7 @@ export default function App() {
 
     // Use a ref to store the last scroll time to prevent rapid-fire switching
     let lastScrollTime = 0;
-    const SCROLL_COOLDOWN = 600; // ms
+    const SCROLL_COOLDOWN = 1400; // ms
 
     const handleWheel = (e: WheelEvent) => {
       // Don't intercept if modifier keys are pressed or modals are open

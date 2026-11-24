@@ -13,8 +13,10 @@ import {
   Layers
 } from 'lucide-react';
 import { SKILL_CATEGORIES } from '../data/portfolioData';
+import { CYBERSECURITY_SKILL_CATEGORIES } from '../data/cybersecurityData';
 import { StarsCounter } from './StarsCounter';
 import { SectionBackgroundAura } from './SectionBackgroundAura';
+import { useAuth } from '../context/AuthContext';
 
 interface CoreCompetenciesProps {
   theme?: string;
@@ -22,6 +24,7 @@ interface CoreCompetenciesProps {
 
 export const CoreCompetencies: React.FC<CoreCompetenciesProps> = ({ theme = 'apple-dark' }) => {
   const isLight = theme === 'apple-light';
+  const { portfolioMode } = useAuth();
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
 
   const getIcon = (iconName: string) => {
@@ -47,9 +50,10 @@ export const CoreCompetencies: React.FC<CoreCompetenciesProps> = ({ theme = 'app
     }
   };
 
+  const categories = portfolioMode === 'cybersecurity' ? CYBERSECURITY_SKILL_CATEGORIES : SKILL_CATEGORIES;
   const filteredCategories = selectedFilter === 'all' 
-    ? SKILL_CATEGORIES 
-    : SKILL_CATEGORIES.filter(cat => cat.title.toLowerCase().includes(selectedFilter.toLowerCase()));
+    ? categories 
+    : categories.filter(cat => cat.title.toLowerCase().includes(selectedFilter.toLowerCase()));
 
   return (
     <section 

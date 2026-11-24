@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, ShieldCheck, Scale, Sparkles, Lock, Unlock, ArrowUpRight, FileText, KeyRound, GraduationCap, Award, Star } from 'lucide-react';
+import { BookOpen, ShieldCheck, Scale, Sparkles, Lock, Unlock, ArrowUpRight, FileText, KeyRound, GraduationCap, Award, Star, Layers, X } from 'lucide-react';
 import { BLOG_POSTS } from '../data/portfolioData';
 import { BlogPost } from '../types';
 import { BlogPostModal } from './BlogPostModal';
@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { StarsCounter } from './StarsCounter';
 import { SectionBackgroundAura } from './SectionBackgroundAura';
 import { getExpertReviewForPost } from '../data/expertReviews';
+import { ArchitecturalWhiteboard } from './ArchitecturalWhiteboard';
 
 interface TechnicalBlogProps {
   theme?: string;
@@ -47,12 +48,15 @@ export const TechnicalBlog: React.FC<TechnicalBlogProps> = ({ theme = 'apple-lig
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [activePost, setActivePost] = useState<BlogPost | null>(null);
   const [modalInitialTab, setModalInitialTab] = useState<'manuscript' | 'review'>('manuscript');
+  const [viewMode, setViewMode] = useState<'publications' | 'whiteboard'>('publications');
+  const [showWhiteboardModal, setShowWhiteboardModal] = useState<boolean>(false);
   const { scrollRef, onMouseMove, onMouseLeave } = useHoverScroll();
 
   const isSectionGated = isSectionLocked('publications');
 
   // Top CISO executive flagship whitepapers
   const executiveFlagshipPosts = BLOG_POSTS.filter(p => 
+    p.id === 'bp-2026-datacenter-biometric-k8s-mesh' ||
     p.id === 'bp-2026-fair-model' || 
     p.id === 'bp-2025-sec-disclosure' || 
     p.id === 'bp-2025-genai-sec' || 
@@ -75,8 +79,8 @@ export const TechnicalBlog: React.FC<TechnicalBlogProps> = ({ theme = 'apple-lig
                               Boolean((post as any).scholar)
                             )) ||
                             (selectedCategory === 'PQC & Cryptography' && (post.category === 'PQC & Cryptography' || post.tags.some(t => ['PQC', 'Quantum', 'Cryptography', 'NIST FIPS 203'].includes(t)))) ||
-                            (selectedCategory === 'engineering' && (['IAM & Zero Trust', 'AI Security Governance', 'Cloud', 'PQC & Cryptography'].includes(post.category) || post.tags.some(t => ['Identity Federation', 'Tokenization', 'FIDO2', 'PQC'].includes(t)))) ||
-                            (selectedCategory === 'Cloud' && (post.category.toLowerCase().includes('cloud') || post.category === 'Azure')) ||
+                            (selectedCategory === 'engineering' && (['IAM & Zero Trust', 'AI Security Governance', 'Cloud', 'PQC & Cryptography'].includes(post.category) || post.tags.some(t => ['Identity Federation', 'Tokenization', 'FIDO2', 'PQC', 'Data Center Architecture', 'Kubernetes & Pods', 'Service Mesh & mTLS'].includes(t)))) ||
+                            (selectedCategory === 'Cloud' && (post.category.toLowerCase().includes('cloud') || post.category === 'Azure' || post.tags.some(t => t.toLowerCase().includes('data center') || t.toLowerCase().includes('kubernetes') || t.toLowerCase().includes('cloud')))) ||
                             (selectedCategory === 'IAM & Zero Trust' && (post.category === 'IAM' || post.category === 'IAM & Zero Trust'));
 
     return matchesSearch && matchesCategory;
@@ -111,7 +115,7 @@ export const TechnicalBlog: React.FC<TechnicalBlogProps> = ({ theme = 'apple-lig
           <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />
           <span>Enterprise Cyber Strategy & Risk Governance · WHITEPAPERS & Playbooks</span>
         </div>
-        <div className="relative flex flex-wrap items-center gap-3">
+        <div className="relative flex flex-wrap items-center justify-between gap-3">
           <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight transition-all ${
             isLight 
               ? 'text-zinc-900 drop-shadow-[0_2px_16px_rgba(59,130,246,0.22)]' 
@@ -119,6 +123,23 @@ export const TechnicalBlog: React.FC<TechnicalBlogProps> = ({ theme = 'apple-lig
           }`}>
             Publications - Solution Design & Architecture
           </h2>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setViewMode(v => v === 'publications' ? 'whiteboard' : 'publications')}
+              className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95 border ${
+                viewMode === 'whiteboard'
+                  ? 'bg-blue-600 text-white border-blue-400 shadow-[0_0_18px_rgba(59,130,246,0.5)]'
+                  : isLight
+                    ? 'bg-gradient-to-r from-blue-600 via-cyan-600 to-indigo-600 text-white border-blue-400 shadow-[0_2px_12px_rgba(37,99,235,0.2)] hover:shadow-[0_4px_20px_rgba(6,182,212,0.3)]'
+                    : 'bg-gradient-to-r from-blue-500 via-cyan-500 to-indigo-500 text-white border-cyan-400/50 shadow-[0_0_16px_rgba(6,182,212,0.3)]'
+              }`}
+            >
+              <Layers className="w-4 h-4 text-cyan-200 animate-pulse" />
+              <span>{viewMode === 'whiteboard' ? '📚 View Whitepapers' : '🎨 Interactive Architecture Whiteboard'}</span>
+            </button>
+          </div>
         </div>
         <p 
           style={{ fontSize: '11px' }}
@@ -129,7 +150,13 @@ export const TechnicalBlog: React.FC<TechnicalBlogProps> = ({ theme = 'apple-lig
         <div style={{ height: '2pt', width: '100%' }} />
       </div>
 
-      {/* 2-Column Publications Layout: Left Featured Executive Briefings (33%) | Right All Publications (67%) */}
+      {/* Main View Mode Container: Interactive Whiteboard vs 2-Column Publications Grid */}
+      {viewMode === 'whiteboard' ? (
+        <div className="flex-1 min-h-0 w-full overflow-hidden mt-1 sm:mt-2">
+          <ArchitecturalWhiteboard theme={theme} />
+        </div>
+      ) : (
+      /* 2-Column Publications Layout: Left Featured Executive Briefings (33%) | Right All Publications (67%) */
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 flex-1 min-h-0 w-full overflow-hidden mt-1 sm:mt-2">
         
         {/* Left Column: Featured Executive Briefings (Reduced by 10% to col-span-4) */}
@@ -460,6 +487,7 @@ export const TechnicalBlog: React.FC<TechnicalBlogProps> = ({ theme = 'apple-lig
         </div>
 
       </div>
+      )}
 
       {/* Modal Reader */}
       <BlogPostModal 

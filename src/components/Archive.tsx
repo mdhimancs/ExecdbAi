@@ -60,19 +60,19 @@ interface ExecutiveBlueprint {
 
 const EXECUTIVE_BLUEPRINTS: ExecutiveBlueprint[] = [
   {
-    id: 'bp-foundation-model-matrix',
-    title: 'Enterprise Foundation Model & Distributed Training Matrix',
-    category: 'AI Systems Blueprint',
-    regulatoryStandard: 'NIST AI RMF 1.0 • ISO/IEC 42001 • Federal Reserve SR 11-7',
-    description: 'An end-to-end architectural roadmap defining multi-node GPU cluster design, 3D parallelism (Tensor/Pipeline/FSDP), continuous embedding drift monitoring, and deterministic LLM guardrails.',
-    executiveTakeaway: 'Accelerates production GenAI time-to-market by 65% while enforcing strict mathematical safety and zero hallucination escape.',
+    id: 'bp-datacenter-biometric-k8s',
+    title: 'Planetary Sovereign Data Center & 13-Nodal Biometric Blueprint (300 Crore Scale)',
+    category: 'Data Center Architecture',
+    regulatoryStandard: 'Tier-IV Multi-Region • ISO/IEC 19794 (Biometrics) • FIPS 140-3 HSM',
+    description: 'Comprehensive HLD/LLD for 300 Crore (3 Billion) citizens across a 5-region sovereign data center fabric with bare-metal Kubernetes clusters, Cilium/Istio service mesh, on-prem DynamoDB/ScyllaDB NoSQL, and 13-nodal biometric image processing (10 fingerprints, 2 irises, 1 face) with FIDO2 SSO and eBPF microsegmentation.',
+    executiveTakeaway: 'Guarantees 99.999% availability with autonomous multi-region failover (RTO < 30s, RPO = 0 intra-region), sub-190ms p99 verification across 39 Billion stored biometric vectors, and partition-tolerant regional survival.',
     coreComponents: [
-      '512x H100 Distributed Compute & RoCE v2 Fabric',
-      'Paged KV-Cache & Speculative Decoding Serving Engine',
-      'Continuous Feature Store & Embedding Drift Watchdog',
-      'Deterministic Pydantic Tool Boundary Enforcement'
+      '5-Region Active-Active Dual Tier-IV DC Fabric & Dark Fiber DWDM',
+      'Bare-Metal K8s Multi-Cluster & 640x GPU Triton Inference Pods',
+      'Cilium eBPF Ambient Mesh with Hardware-Attested SPIFFE mTLS',
+      '180 PB On-Prem DynamoDB-Compatible NoSQL & PostgreSQL Tier'
     ],
-    version: 'v5.0 (AI Production Standard)'
+    version: 'v5.0 (Production Standard)'
   },
   {
     id: 'bp-ztmm',
@@ -1945,13 +1945,6 @@ export const Archive: React.FC<ArchiveProps> = ({
                       1-Page Boardroom Executive Dossier Format
                     </span>
                   </div>
-                  <button
-                    onClick={() => window.print()}
-                    className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-500 shadow-sm"
-                  >
-                    <Printer className="w-3.5 h-3.5" />
-                    <span>Print Dossier / PDF</span>
-                  </button>
                 </div>
 
                 <div className="p-3.5 rounded-lg border bg-white dark:bg-black text-xs space-y-3 border-zinc-200 dark:border-white/10">

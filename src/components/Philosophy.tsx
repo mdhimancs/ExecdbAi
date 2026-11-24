@@ -2,6 +2,7 @@ import React from 'react';
 import { BookOpen, Heart, Users, Quote } from 'lucide-react';
 import { StarsCounter } from './StarsCounter';
 import { SectionBackgroundAura } from './SectionBackgroundAura';
+import { useAuth } from '../context/AuthContext';
 
 interface PhilosophyProps {
   theme?: string;
@@ -10,6 +11,7 @@ interface PhilosophyProps {
 
 export const Philosophy: React.FC<PhilosophyProps> = ({ theme = 'apple-dark' }) => {
   const isLight = theme === 'apple-light' || theme === 'light';
+  const { portfolioMode } = useAuth();
 
   return (
     <section 
@@ -153,7 +155,9 @@ export const Philosophy: React.FC<PhilosophyProps> = ({ theme = 'apple-dark' }) 
                 <StarsCounter pageId="philosophy-pillar-3" isLight={isLight} compact />
               </div>
               <p className={`text-[11px] sm:text-[13px] leading-relaxed font-serif italic ${isLight ? 'text-zinc-700' : 'text-zinc-300'}`}>
-                Enduring appreciation to academic guides, institutional leaders at Goldman Sachs, and the global cybersecurity open-source research community whose collective brilliance illuminates the defense craft.
+                {portfolioMode === 'cybersecurity'
+                  ? 'Enduring appreciation to academic guides, institutional leaders at Goldman Sachs, and the global cybersecurity open-source research community whose collective brilliance illuminates the defense craft.'
+                  : 'Enduring appreciation to academic guides, institutional leaders at Goldman Sachs, and the global AI, machine learning, and data science open-source research community whose collective brilliance illuminates the field.'}
               </p>
             </div>
             <div className={`text-[10px] font-mono mt-3 pt-2 border-t tracking-wide flex items-center justify-between ${isLight ? 'text-zinc-500 border-zinc-100' : 'text-zinc-400 border-white/5'}`}>

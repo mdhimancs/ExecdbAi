@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Menu, X, ArrowRight, Github, Linkedin, Mail, Sliders, Shield, Swords, Music, 
   ChevronLeft, ChevronRight, Lock, ShieldCheck, 
@@ -32,7 +32,139 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isLight = theme === 'apple-light';
-  const { user, isAuthorized, isAdmin, setGateModalOpen } = useAuth();
+  const { user, isAuthorized, isAdmin, setGateModalOpen, portfolioMode } = useAuth();
+
+  // Sliding highlight state for main navigation buttons
+  const [hoveredNavIndex, setHoveredNavIndex] = useState<number | null>(null);
+  const [focusedNavIndex, setFocusedNavIndex] = useState<number | null>(null);
+  const [navIndicator, setNavIndicator] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+    opacity: number;
+  }>({
+    top: 0,
+    left: 0,
+    width: 0,
+    height: 0,
+    opacity: 0,
+  });
+  const navContainerRef = useRef<HTMLDivElement>(null);
+  const navItemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+
+  // Sliding highlight state for secondary action buttons
+  const [hoveredActionIndex, setHoveredActionIndex] = useState<number | null>(null);
+  const [focusedActionIndex, setFocusedActionIndex] = useState<number | null>(null);
+  const [actionIndicator, setActionIndicator] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+    opacity: number;
+  }>({
+    top: 0,
+    left: 0,
+    width: 0,
+    height: 0,
+    opacity: 0,
+  });
+  const actionContainerRef = useRef<HTMLDivElement>(null);
+  const actionItemRefs = useRef<(HTMLElement | null)[]>([]);
+
+  const updateNavIndicator = (index: number) => {
+    const itemEl = navItemRefs.current[index];
+    const containerEl = navContainerRef.current;
+    if (!itemEl || !containerEl) return;
+
+    const itemRect = itemEl.getBoundingClientRect();
+    const containerRect = containerEl.getBoundingClientRect();
+
+    setNavIndicator({
+      top: itemRect.top - containerRect.top,
+      left: itemRect.left - containerRect.left,
+      width: itemRect.width,
+      height: itemRect.height,
+      opacity: 1,
+    });
+  };
+
+  const handleNavMouseEnter = (index: number) => {
+    setHoveredNavIndex(index);
+    updateNavIndicator(index);
+  };
+
+  const handleNavMouseLeave = () => {
+    setHoveredNavIndex(null);
+    if (focusedNavIndex === null) {
+      setNavIndicator((prev) => ({ ...prev, opacity: 0 }));
+    } else {
+      updateNavIndicator(focusedNavIndex);
+    }
+  };
+
+  const handleNavFocus = (index: number) => {
+    setFocusedNavIndex(index);
+    updateNavIndicator(index);
+  };
+
+  const handleNavBlur = () => {
+    setFocusedNavIndex(null);
+    if (hoveredNavIndex === null) {
+      setNavIndicator((prev) => ({ ...prev, opacity: 0 }));
+    }
+  };
+
+  const updateActionIndicator = (index: number) => {
+    const itemEl = actionItemRefs.current[index];
+    const containerEl = actionContainerRef.current;
+    if (!itemEl || !containerEl) return;
+
+    const itemRect = itemEl.getBoundingClientRect();
+    const containerRect = containerEl.getBoundingClientRect();
+
+    setActionIndicator({
+      top: itemRect.top - containerRect.top,
+      left: itemRect.left - containerRect.left,
+      width: itemRect.width,
+      height: itemRect.height,
+      opacity: 1,
+    });
+  };
+
+  const handleActionMouseEnter = (index: number) => {
+    setHoveredActionIndex(index);
+    updateActionIndicator(index);
+  };
+
+  const handleActionMouseLeave = () => {
+    setHoveredActionIndex(null);
+    if (focusedActionIndex === null) {
+      setActionIndicator((prev) => ({ ...prev, opacity: 0 }));
+    } else {
+      updateActionIndicator(focusedActionIndex);
+    }
+  };
+
+  const handleActionFocus = (index: number) => {
+    setFocusedActionIndex(index);
+    updateActionIndicator(index);
+  };
+
+  const handleActionBlur = () => {
+    setFocusedActionIndex(null);
+    if (hoveredActionIndex === null) {
+      setActionIndicator((prev) => ({ ...prev, opacity: 0 }));
+    }
+  };
+
+  // Reset indicators on sidebar expand/collapse
+  useEffect(() => {
+    setNavIndicator((prev) => ({ ...prev, opacity: 0 }));
+    setActionIndicator((prev) => ({ ...prev, opacity: 0 }));
+    setHoveredNavIndex(null);
+    setHoveredActionIndex(null);
+  }, [isSidebarCollapsed]);
 
   const navLinks = [
     { id: 'overview', name: 'Overview', href: '#overview', num: '1', icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -87,35 +219,34 @@ export const Navbar: React.FC<NavbarProps> = ({
               className={`flex items-center group cursor-pointer min-w-0 outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded-xl ${isSidebarCollapsed ? 'justify-center p-1' : 'space-x-3 flex-1'}`}
               title="Overview"
             >
-              {/* Enhanced Luminous Executive Cybersecurity Crest */}
+              {/* Luminous Executive Crest */}
               <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#0284c7] via-[#1d4ed8] to-[#0a1224] flex items-center justify-center text-white shadow-[0_0_24px_rgba(37,99,235,0.45)] ring-1 ring-cyan-400/40 border border-white/30 flex-shrink-0 relative overflow-hidden group-hover:scale-105 group-hover:shadow-[0_0_32px_rgba(56,189,248,0.75)] group-hover:border-cyan-300/60 transition-all duration-300">
-                {/* Specular Radial Core Glow */}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_25%,rgba(255,255,255,0.4),transparent_65%)] pointer-events-none" />
-                
-                {/* Upper Glass Specular Arc */}
                 <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/25 to-transparent pointer-events-none" />
 
-                {/* Razor-Sharp Crossed Swords Accent in Background */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-45 z-0">
-                  <Swords className="w-8 h-8 text-cyan-200 transform scale-110" strokeWidth={1.8} />
-                </div>
-
-                {/* High-Clarity Vector Shield Crest in Foreground (Larger) */}
-                <svg viewBox="0 0 32 32" className="w-[30.4px] h-[30.4px] relative z-10 drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]" fill="none">
-                  <defs>
-                    <linearGradient id="navShieldLeft" x1="6" y1="3" x2="16" y2="28" gradientUnits="userSpaceOnUse">
-                      <stop offset="0%" stopColor="#38bdf8"/>
-                      <stop offset="100%" stopColor="#1e40af"/>
-                    </linearGradient>
-                    <linearGradient id="navShieldRight" x1="16" y1="3" x2="26" y2="28" gradientUnits="userSpaceOnUse">
-                      <stop offset="0%" stopColor="#60a5fa"/>
-                      <stop offset="100%" stopColor="#1d4ed8"/>
-                    </linearGradient>
-                  </defs>
-                  {/* Dual Facet 3D Cybersecurity Shield */}
-                  <path d="M16 3 L6 7.5 C6 16 10.5 23.5 16 28.5 C21.5 23.5 26 16 26 7.5 Z" fill="url(#navShieldLeft)" stroke="#38bdf8" strokeWidth="1.4" strokeLinejoin="round"/>
-                  <path d="M16 3 L26 7.5 C26 16 21.5 23.5 16 28.5 Z" fill="url(#navShieldRight)" stroke="#38bdf8" strokeWidth="1.4" strokeLinejoin="round"/>
-                </svg>
+                {portfolioMode === 'cybersecurity' ? (
+                  <>
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-45 z-0">
+                      <Swords className="w-8 h-8 text-cyan-200 transform scale-110" strokeWidth={1.8} />
+                    </div>
+                    <svg viewBox="0 0 32 32" className="w-[30.4px] h-[30.4px] relative z-10 drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]" fill="none">
+                      <defs>
+                        <linearGradient id="navShieldLeft" x1="6" y1="3" x2="16" y2="28" gradientUnits="userSpaceOnUse">
+                          <stop offset="0%" stopColor="#38bdf8"/>
+                          <stop offset="100%" stopColor="#1e40af"/>
+                        </linearGradient>
+                        <linearGradient id="navShieldRight" x1="16" y1="3" x2="26" y2="28" gradientUnits="userSpaceOnUse">
+                          <stop offset="0%" stopColor="#60a5fa"/>
+                          <stop offset="100%" stopColor="#1d4ed8"/>
+                        </linearGradient>
+                      </defs>
+                      <path d="M16 3 L6 7.5 C6 16 10.5 23.5 16 28.5 C21.5 23.5 26 16 26 7.5 Z" fill="url(#navShieldLeft)" stroke="#38bdf8" strokeWidth="1.4" strokeLinejoin="round"/>
+                      <path d="M16 3 L26 7.5 C26 16 21.5 23.5 16 28.5 Z" fill="url(#navShieldRight)" stroke="#38bdf8" strokeWidth="1.4" strokeLinejoin="round"/>
+                    </svg>
+                  </>
+                ) : (
+                  <Brain className="w-7 h-7 text-cyan-200 relative z-10 animate-pulse" />
+                )}
               </div>
 
               {!isSidebarCollapsed && (
@@ -125,8 +256,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                       {PERSONAL_INFO.name}
                     </span>
                   </div>
-                  <span className="text-[10px] text-blue-500 font-semibold tracking-tight truncate leading-tight mt-0.5">
-                    Cybersecurity & IAM • Data & AI
+                  <span className="text-[10px] text-blue-500 font-bold tracking-tight truncate leading-tight mt-0.5">
+                    {portfolioMode === 'cybersecurity' ? 'Cybersecurity & IAM Portfolio' : 'execdbAI • AI & Data Science'}
                   </span>
                 </div>
               )}
@@ -177,15 +308,47 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span>Navigation</span>
               </div>
             )}
-            <div className="space-y-1 w-full ml-[5%]" role="menu">
+            <div 
+              ref={navContainerRef}
+              onMouseLeave={handleNavMouseLeave}
+              className="relative space-y-1 w-full ml-[5%]" 
+              role="menu"
+            >
+              {/* Sliding Continuous Hover Highlight Pill (Magic Indicator with Ultra-Light Aurora Tint) */}
+              <div
+                className={`absolute rounded-xl pointer-events-none z-0 overflow-hidden ${
+                  isLight
+                    ? 'bg-gradient-to-r from-emerald-400/[0.015] via-cyan-400/[0.015] to-indigo-400/[0.015] border border-cyan-500/[0.08] shadow-[0_1px_6px_rgba(6,182,212,0.03)] backdrop-blur-xs'
+                    : 'bg-gradient-to-r from-emerald-300/[0.025] via-cyan-300/[0.025] to-indigo-300/[0.025] border border-cyan-300/10 shadow-[0_0_8px_rgba(34,211,238,0.04)] backdrop-blur-xs'
+                }`}
+                style={{
+                  top: `${navIndicator.top}px`,
+                  left: `${navIndicator.left}px`,
+                  width: `${navIndicator.width}px`,
+                  height: `${navIndicator.height}px`,
+                  opacity: navIndicator.opacity,
+                  transform: navIndicator.opacity === 0 ? 'scale(0.97)' : 'scale(1)',
+                  transition: 'all 1800ms cubic-bezier(0.16, 1, 0.3, 1)',
+                }}
+                aria-hidden="true"
+              >
+                {/* Ultra-subtle light internal aurora shimmer streak */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-300/5 to-transparent opacity-20 animate-pulse pointer-events-none" />
+              </div>
+
               {navLinks.map((link, index) => {
                 const isActive = activeSection === link.id;
+                const isHovered = hoveredNavIndex === index;
                 return (
                   <a
                     key={link.name}
+                    ref={(el) => { navItemRefs.current[index] = el; }}
                     href={link.href}
                     role="menuitem"
                     onClick={(e) => handleLinkClick(e, link.id)}
+                    onMouseEnter={() => handleNavMouseEnter(index)}
+                    onFocus={() => handleNavFocus(index)}
+                    onBlur={handleNavBlur}
                     title={isSidebarCollapsed ? link.name : undefined}
                     onKeyDown={(e) => {
                       if (e.key === 'ArrowDown') {
@@ -199,32 +362,56 @@ export const Navbar: React.FC<NavbarProps> = ({
                       }
                     }}
                     data-nav-link
-                    className={`flex items-center rounded-xl text-xs sm:text-[12.5px] font-medium transition-all duration-200 group cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 hover:scale-[1.02] hover:shadow-[0_0_14px_rgba(59,130,246,0.35)] active:scale-[0.98] ${
+                    style={{ transition: 'colors 1800ms cubic-bezier(0.16, 1, 0.3, 1)' }}
+                    className={`relative z-10 flex items-center rounded-xl text-xs sm:text-[12.5px] font-medium group cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 active:scale-[0.99] ${
                       isSidebarCollapsed ? 'justify-center p-2 w-10' : 'justify-between pl-3 pr-2.5 py-1.5 w-[80%] text-left'
                     } ${
                       isActive
-                        ? isLight
-                          ? 'bg-blue-50/90 text-blue-600 font-semibold shadow-xs border border-blue-200/60'
-                          : 'bg-white/10 text-white font-semibold shadow-xs border border-white/20'
+                        ? hoveredNavIndex !== null && !isHovered
+                          ? isLight
+                            ? 'text-blue-600 font-semibold'
+                            : 'text-white font-semibold'
+                          : isLight
+                            ? 'bg-blue-50/90 text-blue-600 font-semibold shadow-xs border border-blue-200/60'
+                            : 'bg-white/10 text-white font-semibold shadow-xs border border-white/20'
                         : isLight
-                          ? 'text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100/90 border border-transparent hover:border-blue-300/40'
-                          : 'text-zinc-400 hover:text-white hover:bg-white/[0.06] border border-transparent hover:border-blue-400/30'
+                          ? 'text-zinc-600 hover:text-zinc-950 border border-transparent'
+                          : 'text-zinc-400 hover:text-white border border-transparent'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <span className={`shrink-0 transition-colors ${isActive ? 'text-blue-500' : isLight ? 'text-zinc-400 group-hover:text-zinc-700' : 'text-zinc-500 group-hover:text-zinc-300'}`}>
+                      <span 
+                        style={{ transition: 'color 1800ms cubic-bezier(0.16, 1, 0.3, 1)' }}
+                        className={`shrink-0 ${
+                        isActive 
+                          ? 'text-blue-500' 
+                          : isLight 
+                            ? 'text-zinc-400 group-hover:text-cyan-600' 
+                            : 'text-zinc-500 group-hover:text-cyan-300'
+                      }`}>
                         {link.icon}
                       </span>
                       {!isSidebarCollapsed && (
-                        <span className="whitespace-nowrap tracking-tight truncate">{link.name}</span>
+                        <span 
+                          style={{ transition: 'color 1800ms cubic-bezier(0.16, 1, 0.3, 1)' }}
+                          className="whitespace-nowrap tracking-tight truncate"
+                        >
+                          {link.name}
+                        </span>
                       )}
                     </div>
                     {!isSidebarCollapsed ? (
                       isActive && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0 ml-1" aria-hidden="true" />
+                        <div 
+                          style={{ transition: 'transform 1800ms cubic-bezier(0.16, 1, 0.3, 1)' }}
+                          className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0 ml-1" 
+                          aria-hidden="true" 
+                        />
                       )
                     ) : (
-                      <div className={`rounded-full transition-all duration-300 ${
+                      <div 
+                        style={{ transition: 'all 1800ms cubic-bezier(0.16, 1, 0.3, 1)' }}
+                        className={`rounded-full ${
                         isActive 
                           ? 'w-2 h-2 bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]' 
                           : isLight ? 'w-1.5 h-1.5 bg-zinc-300 group-hover:bg-zinc-500' : 'w-1.5 h-1.5 bg-zinc-600 group-hover:bg-zinc-400'
@@ -238,70 +425,120 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Social Links placed just below nav links (reduced space after Archives by 30%) */}
           <div className="mt-[22px] shrink-0 w-full">
-            <div className={`flex flex-col space-y-1 w-full ml-[5%] ${isSidebarCollapsed ? 'items-center' : ''}`} aria-label="Connect & Contact">
+            <div 
+              ref={actionContainerRef}
+              onMouseLeave={handleActionMouseLeave}
+              className={`relative flex flex-col space-y-1 w-full ml-[5%] ${isSidebarCollapsed ? 'items-center' : ''}`} 
+              aria-label="Connect & Contact"
+            >
+              {/* Sliding Action Highlight Indicator with Ultra-Light Aurora Tint */}
+              <div
+                className={`absolute rounded-xl pointer-events-none z-0 overflow-hidden ${
+                  hoveredActionIndex === 2
+                    ? isLight
+                      ? 'bg-gradient-to-r from-red-500/[0.015] via-amber-500/[0.015] to-pink-500/[0.015] border border-red-500/10 shadow-[0_1px_6px_rgba(239,68,68,0.03)]'
+                      : 'bg-gradient-to-r from-red-500/[0.025] via-rose-500/[0.025] to-pink-500/[0.025] border border-red-400/10 shadow-[0_0_8px_rgba(239,68,68,0.04)]'
+                    : hoveredActionIndex === 3
+                      ? isLight
+                        ? 'bg-gradient-to-r from-cyan-500/[0.015] via-blue-500/[0.015] to-indigo-500/[0.015] border border-blue-400/10 shadow-[0_1px_6px_rgba(59,130,246,0.03)]'
+                        : 'bg-gradient-to-r from-cyan-400/[0.025] via-blue-500/[0.025] to-indigo-400/[0.025] border border-blue-400/10 shadow-[0_0_8px_rgba(59,130,246,0.04)]'
+                      : isLight
+                        ? 'bg-gradient-to-r from-emerald-400/[0.015] via-cyan-400/[0.015] to-indigo-400/[0.015] border border-cyan-500/[0.08] shadow-[0_1px_6px_rgba(6,182,212,0.03)] backdrop-blur-xs'
+                        : 'bg-gradient-to-r from-emerald-300/[0.025] via-cyan-300/[0.025] to-indigo-300/[0.025] border border-cyan-300/10 shadow-[0_0_8px_rgba(34,211,238,0.04)] backdrop-blur-xs'
+                }`}
+                style={{
+                  top: `${actionIndicator.top}px`,
+                  left: `${actionIndicator.left}px`,
+                  width: `${actionIndicator.width}px`,
+                  height: `${actionIndicator.height}px`,
+                  opacity: actionIndicator.opacity,
+                  transform: actionIndicator.opacity === 0 ? 'scale(0.97)' : 'scale(1)',
+                  transition: 'all 1800ms cubic-bezier(0.16, 1, 0.3, 1)',
+                }}
+                aria-hidden="true"
+              />
+
               <a
+                ref={(el) => { actionItemRefs.current[0] = el; }}
                 href={PERSONAL_INFO.github}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`flex items-center rounded-xl text-xs sm:text-[12.5px] font-medium transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 hover:scale-[1.02] hover:shadow-[0_0_14px_rgba(59,130,246,0.35)] border border-transparent hover:border-blue-400/40 ${
+                onMouseEnter={() => handleActionMouseEnter(0)}
+                onFocus={() => handleActionFocus(0)}
+                onBlur={handleActionBlur}
+                className={`relative z-10 flex items-center rounded-xl text-xs sm:text-[12.5px] font-medium transition-colors duration-1400 ease-[cubic-bezier(0.16,1,0.3,1)] outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 border border-transparent ${
                   isSidebarCollapsed ? 'justify-center p-2 w-10' : 'pl-3 pr-2.5 py-1.5 w-[80%]'
                 } ${
-                  isLight ? 'text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100/90 focus-visible:bg-zinc-100/90' : 'text-zinc-400 hover:text-white hover:bg-white/[0.06] focus-visible:bg-white/[0.06]'
+                  isLight ? 'text-zinc-600 hover:text-zinc-950' : 'text-zinc-400 hover:text-white'
                 }`}
                 title="GitHub Profile"
                 aria-label="Visit GitHub Profile"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <Github className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+                  <Github className="w-4 h-4 flex-shrink-0 transition-colors duration-1400 ease-[cubic-bezier(0.16,1,0.3,1)]" aria-hidden="true" />
                   {!isSidebarCollapsed && <span className="whitespace-nowrap tracking-tight truncate">GitHub</span>}
                 </div>
               </a>
               <a
+                ref={(el) => { actionItemRefs.current[1] = el; }}
                 href={PERSONAL_INFO.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`flex items-center rounded-xl text-xs sm:text-[12.5px] font-medium transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 hover:scale-[1.02] hover:shadow-[0_0_14px_rgba(59,130,246,0.35)] border border-transparent hover:border-blue-400/40 ${
+                onMouseEnter={() => handleActionMouseEnter(1)}
+                onFocus={() => handleActionFocus(1)}
+                onBlur={handleActionBlur}
+                className={`relative z-10 flex items-center rounded-xl text-xs sm:text-[12.5px] font-medium transition-colors duration-1400 ease-[cubic-bezier(0.16,1,0.3,1)] outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 border border-transparent ${
                   isSidebarCollapsed ? 'justify-center p-2 w-10' : 'pl-3 pr-2.5 py-1.5 w-[80%]'
                 } ${
-                  isLight ? 'text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100/90 focus-visible:bg-zinc-100/90' : 'text-zinc-400 hover:text-white hover:bg-white/[0.06] focus-visible:bg-white/[0.06]'
+                  isLight ? 'text-zinc-600 hover:text-zinc-950' : 'text-zinc-400 hover:text-white'
                 }`}
                 title="LinkedIn Profile"
                 aria-label="Visit LinkedIn Profile"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <Linkedin className="w-4 h-4 text-blue-500 flex-shrink-0" aria-hidden="true" />
+                  <Linkedin className="w-4 h-4 text-blue-500 flex-shrink-0 transition-colors duration-1400 ease-[cubic-bezier(0.16,1,0.3,1)]" aria-hidden="true" />
                   {!isSidebarCollapsed && <span className="whitespace-nowrap tracking-tight truncate">LinkedIn</span>}
                 </div>
               </a>
               <button
+                ref={(el) => { actionItemRefs.current[2] = el; }}
                 type="button"
                 onClick={onOpenContact}
-                className={`flex items-center rounded-xl text-xs sm:text-[12.5px] font-medium transition-all duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 hover:scale-[1.02] hover:shadow-[0_0_16px_rgba(239,68,68,0.45)] hover:border-red-400/70 active:scale-95 active:shadow-[0_0_24px_rgba(239,68,68,0.7)] ${
+                onMouseEnter={() => handleActionMouseEnter(2)}
+                onFocus={() => handleActionFocus(2)}
+                onBlur={handleActionBlur}
+                className={`relative z-10 flex items-center rounded-xl text-xs sm:text-[12.5px] font-medium transition-colors duration-1400 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 active:scale-95 border border-transparent ${
                   isSidebarCollapsed ? 'justify-center p-2 w-10' : 'pl-3 pr-2.5 py-1.5 w-[80%] text-left'
                 } ${
-                  isLight ? 'text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100/90 focus-visible:bg-zinc-100/90 border border-transparent' : 'text-zinc-400 hover:text-white hover:bg-white/[0.06] focus-visible:bg-white/[0.06] border border-transparent'
+                  isLight ? 'text-zinc-600 hover:text-zinc-950' : 'text-zinc-400 hover:text-white'
                 }`}
                 title="Get in Touch via Email"
                 aria-label="Open contact form"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <Mail className="w-4 h-4 text-red-500 flex-shrink-0" aria-hidden="true" />
+                  <Mail className="w-4 h-4 text-red-500 flex-shrink-0 transition-colors duration-1400 ease-[cubic-bezier(0.16,1,0.3,1)]" aria-hidden="true" />
                   {!isSidebarCollapsed && <span className="whitespace-nowrap tracking-tight truncate">Get in Touch</span>}
                 </div>
               </button>
               <button
+                ref={(el) => { actionItemRefs.current[3] = el; }}
                 type="button"
                 onClick={onOpenSuperAdmin}
-                className={`flex items-center rounded-xl text-xs sm:text-[12.5px] font-medium transition-all duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 hover:scale-[1.02] hover:shadow-[0_0_18px_rgba(59,130,246,0.5)] hover:border-blue-400/80 active:scale-95 active:shadow-[0_0_26px_rgba(59,130,246,0.8)] ${
+                onMouseEnter={() => handleActionMouseEnter(3)}
+                onFocus={() => handleActionFocus(3)}
+                onBlur={handleActionBlur}
+                className={`relative z-10 flex items-center rounded-xl text-xs sm:text-[12.5px] font-medium transition-colors duration-1400 ease-[cubic-bezier(0.16,1,0.3,1)] cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 active:scale-95 ${
                   isSidebarCollapsed ? 'justify-center p-2 w-10' : 'pl-3 pr-2.5 py-1.5 w-[80%] text-left'
                 } ${
-                  isLight ? 'text-blue-700 hover:text-blue-900 bg-blue-50/80 hover:bg-blue-100/80 border border-blue-200' : 'text-blue-300 hover:text-white bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20'
+                  hoveredActionIndex === 3
+                    ? isLight ? 'text-blue-900 border border-blue-300/40' : 'text-white border border-blue-400/40'
+                    : isLight ? 'text-blue-700 bg-blue-50/80 border border-blue-200' : 'text-blue-300 bg-blue-500/10 border border-blue-500/20'
                 }`}
                 title="Super Admin Console"
                 aria-label="Open Super Admin Console"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <ShieldCheck className="w-4 h-4 text-blue-600 flex-shrink-0" aria-hidden="true" />
+                  <ShieldCheck className="w-4 h-4 text-blue-600 flex-shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105" aria-hidden="true" />
                   {!isSidebarCollapsed && <span className="whitespace-nowrap tracking-tight truncate font-bold">Admin Console</span>}
                 </div>
               </button>
@@ -392,19 +629,27 @@ export const Navbar: React.FC<NavbarProps> = ({
         >
           <div className="w-9 h-9 rounded-[12px] bg-gradient-to-br from-[#0284c7] via-[#1d4ed8] to-[#0a1224] flex items-center justify-center text-white shadow-[0_0_16px_rgba(37,99,235,0.45)] ring-1 ring-cyan-400/40 border border-white/30 flex-shrink-0 relative overflow-hidden">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_25%,rgba(255,255,255,0.4),transparent_65%)] pointer-events-none" />
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-45 z-0">
-              <Swords className="w-7 h-7 text-cyan-200" strokeWidth={1.8} />
-            </div>
-            <svg viewBox="0 0 32 32" className="w-[26.6px] h-[26.6px] relative z-10 drop-shadow-[0_1px_4px_rgba(0,0,0,0.7)]" fill="none">
-              <path d="M16 3 L6 7.5 C6 16 10.5 23.5 16 28.5 C21.5 23.5 26 16 26 7.5 Z" fill="#38bdf8" stroke="#38bdf8" strokeWidth="1.4" strokeLinejoin="round"/>
-              <path d="M16 3 L26 7.5 C26 16 21.5 23.5 16 28.5 Z" fill="#1d4ed8" stroke="#38bdf8" strokeWidth="1.4" strokeLinejoin="round"/>
-            </svg>
+            {portfolioMode === 'cybersecurity' ? (
+              <>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-45 z-0">
+                  <Swords className="w-7 h-7 text-cyan-200" strokeWidth={1.8} />
+                </div>
+                <svg viewBox="0 0 32 32" className="w-[26.6px] h-[26.6px] relative z-10 drop-shadow-[0_1px_4px_rgba(0,0,0,0.7)]" fill="none">
+                  <path d="M16 3 L6 7.5 C6 16 10.5 23.5 16 28.5 C21.5 23.5 26 16 26 7.5 Z" fill="#38bdf8" stroke="#38bdf8" strokeWidth="1.4" strokeLinejoin="round"/>
+                  <path d="M16 3 L26 7.5 C26 16 21.5 23.5 16 28.5 Z" fill="#1d4ed8" stroke="#38bdf8" strokeWidth="1.4" strokeLinejoin="round"/>
+                </svg>
+              </>
+            ) : (
+              <Brain className="w-6 h-6 text-cyan-200 relative z-10 animate-pulse" />
+            )}
           </div>
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1.5 min-w-0">
               <span className={`font-semibold text-xs sm:text-sm truncate ${isLight ? 'drop-shadow-[0_1px_5px_rgba(0,0,0,0.1)]' : 'drop-shadow-[0_1px_6px_rgba(255,255,255,0.2)]'}`}>{PERSONAL_INFO.name}</span>
             </div>
-            <span className="text-[9px] text-blue-500 font-semibold tracking-tight truncate">Cybersecurity & IAM • Data & AI</span>
+            <span className="text-[9px] text-blue-500 font-bold tracking-tight truncate">
+              {portfolioMode === 'cybersecurity' ? 'Cybersecurity & IAM Portfolio' : 'execdbAI • AI & Data Science'}
+            </span>
           </div>
         </a>
 
